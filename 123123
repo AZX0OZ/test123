@@ -1516,7 +1516,7 @@ end
                             Position = UDim2.new(0, 6, 0, 0),
                             Size = UDim2.new(0, 250, 1, 0),
                             Font = Enum.Font.Ubuntu,
-                            Text = value.Dropdown,
+                            Text = "...", -- Устанавливаем начальный текст, затем обновим его через update_text
                             TextColor3 = Color3.fromRGB(150, 150, 150),
                             TextSize = 14,
                             TextXAlignment = Enum.TextXAlignment.Left,
@@ -1727,6 +1727,10 @@ end
                                 dropdown_is_first = false
                             end
                         end
+                        
+                        -- Вызываем update_text для установки начального текста
+                        element.update_text()
+                        
                         element:set_value(value, true)
                     elseif type == "Button" then
                         Border.Size = Border.Size + UDim2.new(0, 0, 0, 30)
