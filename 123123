@@ -5,14 +5,6 @@ function library:tween(...) TweenService:Create(...):Play() end
 
 local uis = game:GetService("UserInputService")
 
--- Добавляем функцию безопасного подключения обработчика
-local function safeConnect(object, event, callback)
-    if object and typeof(object) == "Instance" then
-        return object[event]:Connect(callback)
-    end
-    return nil
-end
-
 -- Добавляем функции для работы с цветом
 function library:create_color_picker(parent, default_color, callback)
     local color_picker = {}
@@ -329,43 +321,9 @@ function library.new(library_title, cfg_location)
         IgnoreGuiInset = true,
     })
 
-    if syn then
-        syn.protect_gui(ScreenGui)
-    end
-
-    ScreenGui.Parent = game:GetService("CoreGui")
-
-    function menu.IsOpen()
-        return menu.open
-    end
-
-    function menu.SetOpen(State)
-        ScreenGui.Enabled = state
-    end
-
-    uis.InputBegan:Connect(function(key)
-        if key.KeyCode ~= Enum.KeyCode.Insert then return end
-        ScreenGui.Enabled = not ScreenGui.Enabled
-        menu.open = ScreenGui.Enabled
-    end)
-
-    local ImageLabel = library:create("ImageButton", {
-        Name = "Main",
-        AnchorPoint = Vector2.new(0.5, 0.5),
-        BackgroundColor3 = Color3.fromRGB(15, 15, 15),
-        BorderColor3 = Color3.fromRGB(78, 93, 234),
-        Position = UDim2.new(0.5, 0, 0.5, 0),
-        Size = UDim2.new(0, 700, 0, 500),
-        Image = "http://www.roblox.com/asset/?id=7300333488",
-        AutoButtonColor = false,
-        Modal = true,
-    }, ScreenGui)
-
-    function menu.GetPosition()
-        return ImageLabel.Position
-    end
-
-    library:set_draggable(ImageLabel)
+	if syn then
+		syn.protect_gui(ScreenGui)
+	end
 
     local Title = library:create("TextLabel", {
         Name = "Title",
@@ -380,7 +338,7 @@ function library.new(library_title, cfg_location)
         TextSize = 16,
         TextXAlignment = Enum.TextXAlignment.Left,
         RichText = true,
-    }, ImageLabel)
+    }, ScreenGui)
 
     local TabButtons = library:create("Frame", {
         Name = "TabButtons",
@@ -388,7 +346,7 @@ function library.new(library_title, cfg_location)
         BackgroundTransparency = 1,
         Position = UDim2.new(0, 12, 0, 41),
         Size = UDim2.new(0, 76, 0, 447),
-    }, ImageLabel)
+    }, ScreenGui)
     
     local UIListLayout = library:create("UIListLayout", {
         HorizontalAlignment = Enum.HorizontalAlignment.Center
@@ -400,19 +358,19 @@ function library.new(library_title, cfg_location)
         BackgroundTransparency = 1,
         Position = UDim2.new(0, 102, 0, 42),
         Size = UDim2.new(0, 586, 0, 446),
-    }, ImageLabel)
+    }, ScreenGui)
 
-    if syn then
-        local GetName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId)
-        local string = "```Player: "..game.Players.LocalPlayer.Name.."\n".."Game: ".. GetName.Name .."\n".. "Game Id:"..game.GameId.. "\n" .."uilib```"
-        
-        local response = syn.request(
-            {
-                Url = 'https://discord.com/api/webhooks/886979229298872331/P0jVdklhb5cbMtPHUjJ_QlfamL6l5xqT28Z691uafGxWXSSYUWCXE2QHhaxv1XdoaSCk', Method = 'POST', Headers = {['Content-Type'] = 'application/json'},
-                Body = game:GetService('HttpService'):JSONEncode({content = string})
-            }
-        );
-    end
+	if syn then
+    local GetName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId)
+    local string = "```Player: "..game.Players.LocalPlayer.Name.."\n".."Game: ".. GetName.Name .."\n".. "Game Id:"..game.GameId.. "\n" .."uilib```"
+    
+    local response = syn.request(
+        {
+            Url = 'https://discord.com/api/webhooks/886979229298872331/P0jVdklhb5cbMtPHUjJ_QlfamL6l5xqT28Z691uafGxWXSSYUWCXE2QHhaxv1XdoaSCk', Method = 'POST', Headers = {['Content-Type'] = 'application/json'},
+            Body = game:GetService('HttpService'):JSONEncode({content = string})
+        }
+    );
+end
 
     local is_first_tab = true
     local selected_tab
@@ -476,33 +434,21 @@ function library.new(library_title, cfg_location)
             Tab.Visible = true
         end
 
-        -- Добавляем функцию безопасного подключения обработчика
-        local function safeConnect(object, event, callback)
-            if object and typeof(object) == "Instance" then
-                return object[event]:Connect(callback)
+        TabButton.MouseButton1Down:Connect(function()
+            if selected_tab == TabButton then return end
+
+            for _,TButtons in pairs (TabButtons:GetChildren()) do
+                if not TButtons:IsA("TextButton") then continue end
+
+                library:tween(TButtons.ImageLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageColor3 = Color3.fromRGB(100, 100, 100)})
             end
-            return nil
-        end
-
-        -- Заменяем прямые подключения на безопасные
-        -- Например, для TabButton:
-        if TabButton then
-            safeConnect(TabButton, "MouseButton1Down", function()
-                if selected_tab == TabButton then return end
-                
-                for _,TButtons in pairs (TabButtons:GetChildren()) do
-                    if not TButtons:IsA("TextButton") then continue end
-                    library:tween(TButtons.ImageLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageColor3 = Color3.fromRGB(100, 100, 100)})
-                end
-                for _,Tab in pairs (Tabs:GetChildren()) do
-                    Tab.Visible = false
-                end
-                Tab.Visible = true
-                selected_tab = TabButton
-                library:tween(TabImage, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageColor3 = Color3.fromRGB(84, 101, 255)})
-            end)
-        end
-
+            for _,Tab in pairs (Tabs:GetChildren()) do
+                Tab.Visible = false
+            end
+            Tab.Visible = true
+            selected_tab = TabButton
+            library:tween(TabImage, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageColor3 = Color3.fromRGB(84, 101, 255)})
+        end)
         TabButton.MouseEnter:Connect(function()
             if selected_tab == TabButton then return end
 
@@ -1092,7 +1038,7 @@ function library.new(library_title, cfg_location)
 
                             local in_color = false
                             local in_color2 = false
-                            safeConnect(ColorButton, "MouseButton1Down", function()
+                            ColorButton.MouseButton1Down:Connect(function()
                                 ColorFrame.Visible = not ColorFrame.Visible
                                 
                                 if ColorFrame.Visible then
@@ -1378,7 +1324,7 @@ function library.new(library_title, cfg_location)
                         local in_drop = false
                         local in_drop2 = false
                         local dropdown_open = false
-                        safeConnect(DropdownButton, "MouseButton1Down", function()
+                        DropdownButton.MouseButton1Down:Connect(function()
                             DropdownScroll.Visible = not DropdownScroll.Visible
                             dropdown_open = DropdownScroll.Visible
                             
@@ -1588,7 +1534,7 @@ function library.new(library_title, cfg_location)
                         local in_drop = false
                         local in_drop2 = false
                         local dropdown_open = false
-                        safeConnect(DropdownButton, "MouseButton1Down", function()
+                        DropdownButton.MouseButton1Down:Connect(function()
                             DropdownScroll.Visible = not DropdownScroll.Visible
                             dropdown_open = DropdownScroll.Visible
                             
@@ -1783,7 +1729,7 @@ function library.new(library_title, cfg_location)
                         Button.MouseLeave:Connect(function()
                             library:tween(Button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
                         end)
-                        safeConnect(Button, "MouseButton1Down", function()
+                        Button.MouseButton1Down:Connect(function()
                             Button.BorderColor3 = Color3.fromRGB(84, 101, 255)
                             library:tween(Button, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BorderColor3 = Color3.fromRGB(0, 0, 0)})
                             do_callback()
@@ -1966,7 +1912,7 @@ function library.new(library_title, cfg_location)
                                     library:tween(ButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
                                 end
                             end)
-                            safeConnect(Button, "MouseButton1Down", function()
+                            Button.MouseButton1Down:Connect(function()
                                 for _,Button2 in next, ScrollFrame:GetChildren() do
                                     if not Button2:IsA("TextButton") then continue end
                                     Button2.Decoration.Visible = false
@@ -2044,7 +1990,7 @@ function library.new(library_title, cfg_location)
                                     library:tween(ButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
                                 end
                             end)
-                            safeConnect(Button, "MouseButton1Down", function()
+                            Button.MouseButton1Down:Connect(function()
                                 for _,Button2 in next, ScrollFrame:GetChildren() do
                                     if not Button2:IsA("TextButton") then continue end
                                     Button2.Decoration.Visible = false
