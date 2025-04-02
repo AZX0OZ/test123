@@ -325,6 +325,40 @@ function library.new(library_title, cfg_location)
 		syn.protect_gui(ScreenGui)
 	end
 
+    ScreenGui.Parent = game:GetService("CoreGui")
+
+    function menu.IsOpen()
+        return menu.open
+    end
+
+    function menu.SetOpen(State)
+        ScreenGui.Enabled = state
+    end
+
+    uis.InputBegan:Connect(function(key)
+        if key.KeyCode ~= Enum.KeyCode.Insert then return end
+        ScreenGui.Enabled = not ScreenGui.Enabled
+        menu.open = ScreenGui.Enabled
+    end)
+
+    local ImageLabel = library:create("ImageButton", {
+        Name = "Main",
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        BackgroundColor3 = Color3.fromRGB(15, 15, 15),
+        BorderColor3 = Color3.fromRGB(78, 93, 234),
+        Position = UDim2.new(0.5, 0, 0.5, 0),
+        Size = UDim2.new(0, 700, 0, 500),
+        Image = "http://www.roblox.com/asset/?id=7300333488",
+        AutoButtonColor = false,
+        Modal = true,
+    }, ScreenGui)
+
+    function menu.GetPosition()
+        return ImageLabel.Position
+    end
+
+    library:set_draggable(ImageLabel)
+
     local Title = library:create("TextLabel", {
         Name = "Title",
         AnchorPoint = Vector2.new(0.5, 0),
@@ -338,7 +372,7 @@ function library.new(library_title, cfg_location)
         TextSize = 16,
         TextXAlignment = Enum.TextXAlignment.Left,
         RichText = true,
-    }, ScreenGui)
+    }, ImageLabel)
 
     local TabButtons = library:create("Frame", {
         Name = "TabButtons",
@@ -346,7 +380,7 @@ function library.new(library_title, cfg_location)
         BackgroundTransparency = 1,
         Position = UDim2.new(0, 12, 0, 41),
         Size = UDim2.new(0, 76, 0, 447),
-    }, ScreenGui)
+    }, ImageLabel)
     
     local UIListLayout = library:create("UIListLayout", {
         HorizontalAlignment = Enum.HorizontalAlignment.Center
@@ -358,7 +392,7 @@ function library.new(library_title, cfg_location)
         BackgroundTransparency = 1,
         Position = UDim2.new(0, 102, 0, 42),
         Size = UDim2.new(0, 586, 0, 446),
-    }, ScreenGui)
+    }, ImageLabel)
 
 	if syn then
     local GetName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId)
