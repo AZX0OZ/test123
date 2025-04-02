@@ -1355,7 +1355,7 @@ end
                             BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
                             Visible = false,
                             ZIndex = 2,
-                        }, Dropdown)
+                        }, game:GetService("CoreGui"):FindFirstChild("unknown"))
 
                         local UIListLayout = library:create("UIListLayout", {
                             HorizontalAlignment = Enum.HorizontalAlignment.Center,
@@ -1378,6 +1378,10 @@ end
                         DropdownButton.MouseButton1Down:Connect(function()
                             DropdownScroll.Visible = not DropdownScroll.Visible
                             dropdown_open = DropdownScroll.Visible
+                            
+                            if DropdownScroll.Visible then
+                                updateDropdownPosition()
+                            end
 
                             if not dropdown_open then
                                 library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
@@ -1561,7 +1565,7 @@ end
                             BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
                             Visible = false,
                             ZIndex = 2,
-                        }, Dropdown)
+                        }, game:GetService("CoreGui"):FindFirstChild("unknown"))
 
                         local UIListLayout = library:create("UIListLayout", {
                             HorizontalAlignment = Enum.HorizontalAlignment.Center,
@@ -1584,6 +1588,10 @@ end
                         DropdownButton.MouseButton1Down:Connect(function()
                             DropdownScroll.Visible = not DropdownScroll.Visible
                             dropdown_open = DropdownScroll.Visible
+                            
+                            if DropdownScroll.Visible then
+                                updateDropdownPosition()
+                            end
 
                             if not dropdown_open then
                                 library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
@@ -2293,6 +2301,64 @@ game:GetService("UserInputService").InputBegan:Connect(function(input)
                not (mousePos.X >= ColorButton.AbsolutePosition.X and mousePos.X <= ColorButton.AbsolutePosition.X + ColorButton.AbsoluteSize.X and
                     mousePos.Y >= ColorButton.AbsolutePosition.Y and mousePos.Y <= ColorButton.AbsolutePosition.Y + ColorButton.AbsoluteSize.Y) then
                 ColorFrame.Visible = false
+            end
+        end
+    end
+end)
+
+-- Добавляем функцию обновления позиции выпадающего меню
+local function updateDropdownPosition()
+    if DropdownScroll and DropdownScroll.Visible then
+        local buttonPos = DropdownButton.AbsolutePosition
+        local buttonSize = DropdownButton.AbsoluteSize
+        
+        DropdownScroll.Position = UDim2.new(0, buttonPos.X, 0, buttonPos.Y + buttonSize.Y + 1)
+    end
+end
+
+-- Обновляем обработчик клика по кнопке
+DropdownButton.MouseButton1Down:Connect(function()
+    DropdownScroll.Visible = not DropdownScroll.Visible
+    dropdown_open = DropdownScroll.Visible
+    
+    if DropdownScroll.Visible then
+        updateDropdownPosition()
+    end
+
+    if not dropdown_open then
+        library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
+        library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
+    else
+        library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)})
+        library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)})
+    end
+end)
+
+-- Добавляем обновление позиции при скролле и изменении размера окна
+game:GetService("RunService").RenderStepped:Connect(updateDropdownPosition)
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseWheel then
+        updateDropdownPosition()
+    end
+end)
+
+-- Добавляем закрытие выпадающего меню при клике вне его области
+game:GetService("UserInputService").InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        local mousePos = game:GetService("UserInputService"):GetMouseLocation()
+        
+        if DropdownScroll and DropdownScroll.Visible then
+            local framePos = DropdownScroll.AbsolutePosition
+            local frameSize = DropdownScroll.AbsoluteSize
+            
+            if not (mousePos.X >= framePos.X and mousePos.X <= framePos.X + frameSize.X and
+                   mousePos.Y >= framePos.Y and mousePos.Y <= framePos.Y + frameSize.Y) and
+               not (mousePos.X >= DropdownButton.AbsolutePosition.X and mousePos.X <= DropdownButton.AbsolutePosition.X + DropdownButton.AbsoluteSize.X and
+                    mousePos.Y >= DropdownButton.AbsolutePosition.Y and mousePos.Y <= DropdownButton.AbsolutePosition.Y + DropdownButton.AbsoluteSize.Y) then
+                DropdownScroll.Visible = false
+                dropdown_open = false
+                library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
+                library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
             end
         end
     end
