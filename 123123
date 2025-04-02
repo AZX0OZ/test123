@@ -5,6 +5,14 @@ function library:tween(...) TweenService:Create(...):Play() end
 
 local uis = game:GetService("UserInputService")
 
+-- Добавляем функцию безопасного подключения обработчика
+local function safeConnect(object, event, callback)
+    if object and typeof(object) == "Instance" then
+        return object[event]:Connect(callback)
+    end
+    return nil
+end
+
 -- Добавляем функции для работы с цветом
 function library:create_color_picker(parent, default_color, callback)
     local color_picker = {}
@@ -468,21 +476,33 @@ function library.new(library_title, cfg_location)
             Tab.Visible = true
         end
 
-        TabButton.MouseButton1Down:Connect(function()
-            if selected_tab == TabButton then return end
-
-            for _,TButtons in pairs (TabButtons:GetChildren()) do
-                if not TButtons:IsA("TextButton") then continue end
-
-                library:tween(TButtons.ImageLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageColor3 = Color3.fromRGB(100, 100, 100)})
+        -- Добавляем функцию безопасного подключения обработчика
+        local function safeConnect(object, event, callback)
+            if object and typeof(object) == "Instance" then
+                return object[event]:Connect(callback)
             end
-            for _,Tab in pairs (Tabs:GetChildren()) do
-                Tab.Visible = false
-            end
-            Tab.Visible = true
-            selected_tab = TabButton
-            library:tween(TabImage, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageColor3 = Color3.fromRGB(84, 101, 255)})
-        end)
+            return nil
+        end
+
+        -- Заменяем прямые подключения на безопасные
+        -- Например, для TabButton:
+        if TabButton then
+            safeConnect(TabButton, "MouseButton1Down", function()
+                if selected_tab == TabButton then return end
+                
+                for _,TButtons in pairs (TabButtons:GetChildren()) do
+                    if not TButtons:IsA("TextButton") then continue end
+                    library:tween(TButtons.ImageLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageColor3 = Color3.fromRGB(100, 100, 100)})
+                end
+                for _,Tab in pairs (Tabs:GetChildren()) do
+                    Tab.Visible = false
+                end
+                Tab.Visible = true
+                selected_tab = TabButton
+                library:tween(TabImage, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageColor3 = Color3.fromRGB(84, 101, 255)})
+            end)
+        end
+
         TabButton.MouseEnter:Connect(function()
             if selected_tab == TabButton then return end
 
@@ -1072,7 +1092,7 @@ function library.new(library_title, cfg_location)
 
                             local in_color = false
                             local in_color2 = false
-                            ColorButton.MouseButton1Down:Connect(function()
+                            safeConnect(ColorButton, "MouseButton1Down", function()
                                 ColorFrame.Visible = not ColorFrame.Visible
                                 
                                 if ColorFrame.Visible then
@@ -1358,7 +1378,7 @@ function library.new(library_title, cfg_location)
                         local in_drop = false
                         local in_drop2 = false
                         local dropdown_open = false
-                        DropdownButton.MouseButton1Down:Connect(function()
+                        safeConnect(DropdownButton, "MouseButton1Down", function()
                             DropdownScroll.Visible = not DropdownScroll.Visible
                             dropdown_open = DropdownScroll.Visible
                             
@@ -1568,7 +1588,7 @@ function library.new(library_title, cfg_location)
                         local in_drop = false
                         local in_drop2 = false
                         local dropdown_open = false
-                        DropdownButton.MouseButton1Down:Connect(function()
+                        safeConnect(DropdownButton, "MouseButton1Down", function()
                             DropdownScroll.Visible = not DropdownScroll.Visible
                             dropdown_open = DropdownScroll.Visible
                             
@@ -1763,7 +1783,7 @@ function library.new(library_title, cfg_location)
                         Button.MouseLeave:Connect(function()
                             library:tween(Button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
                         end)
-                        Button.MouseButton1Down:Connect(function()
+                        safeConnect(Button, "MouseButton1Down", function()
                             Button.BorderColor3 = Color3.fromRGB(84, 101, 255)
                             library:tween(Button, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BorderColor3 = Color3.fromRGB(0, 0, 0)})
                             do_callback()
@@ -1946,7 +1966,7 @@ function library.new(library_title, cfg_location)
                                     library:tween(ButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
                                 end
                             end)
-                            Button.MouseButton1Down:Connect(function()
+                            safeConnect(Button, "MouseButton1Down", function()
                                 for _,Button2 in next, ScrollFrame:GetChildren() do
                                     if not Button2:IsA("TextButton") then continue end
                                     Button2.Decoration.Visible = false
@@ -2024,7 +2044,7 @@ function library.new(library_title, cfg_location)
                                     library:tween(ButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
                                 end
                             end)
-                            Button.MouseButton1Down:Connect(function()
+                            safeConnect(Button, "MouseButton1Down", function()
                                 for _,Button2 in next, ScrollFrame:GetChildren() do
                                     if not Button2:IsA("TextButton") then continue end
                                     Button2.Decoration.Visible = false
