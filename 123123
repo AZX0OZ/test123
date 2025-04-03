@@ -1027,13 +1027,14 @@ end
 
                             local ColorFrame = library:create("Frame", {
                                 Name = "ColorFrame",
+                                Parent = ColorButton,
                                 BackgroundColor3 = Color3.fromRGB(10, 10, 10),
                                 BorderColor3 = Color3.fromRGB(0, 0, 0),
                                 Position = UDim2.new(1, 5, 0, 0),
                                 Size = UDim2.new(0, 200, 0, 170),
                                 Visible = false,
                                 ZIndex = 2,
-                            }, game:GetService("CoreGui"):FindFirstChild("unknown"))
+                            }, ColorButton)
 
                             local ColorPicker = library:create("ImageButton", {
                                 Name = "ColorPicker",
@@ -1091,14 +1092,6 @@ end
                             local in_color2 = false
                             ColorButton.MouseButton1Down:Connect(function()
                                 ColorFrame.Visible = not ColorFrame.Visible
-                                
-                                if ColorFrame.Visible then
-                                    -- Обновляем позицию color picker'а относительно кнопки
-                                    local buttonPos = ColorButton.AbsolutePosition
-                                    local buttonSize = ColorButton.AbsoluteSize
-                                    
-                                    ColorFrame.Position = UDim2.new(0, buttonPos.X + buttonSize.X + 5, 0, buttonPos.Y)
-                                end
                             end)
                             ColorFrame.MouseEnter:Connect(function()
                                 in_color = true
@@ -2259,43 +2252,5 @@ end
 
     return menu
 end
-
--- Добавляем функцию обновления позиции
-local function updateColorPickerPosition()
-    if ColorFrame and ColorFrame.Visible then
-        local buttonPos = ColorButton.AbsolutePosition
-        local buttonSize = ColorButton.AbsoluteSize
-        
-        ColorFrame.Position = UDim2.new(0, buttonPos.X + buttonSize.X + 5, 0, buttonPos.Y)
-    end
-end
-
--- Подключаем обновление позиции к событиям
-game:GetService("RunService").RenderStepped:Connect(updateColorPickerPosition)
-game:GetService("UserInputService").InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseWheel then
-        updateColorPickerPosition()
-    end
-end)
-
--- В функции element:add_color() добавляем обработчик кликов вне color picker'а
-game:GetService("UserInputService").InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        local mousePos = game:GetService("UserInputService"):GetMouseLocation()
-        
-        if ColorFrame and ColorFrame.Visible then
-            local framePos = ColorFrame.AbsolutePosition
-            local frameSize = ColorFrame.AbsoluteSize
-            
-            -- Проверяем, находится ли мышь вне области color picker'а и кнопки
-            if not (mousePos.X >= framePos.X and mousePos.X <= framePos.X + frameSize.X and
-                   mousePos.Y >= framePos.Y and mousePos.Y <= framePos.Y + frameSize.Y) and
-               not (mousePos.X >= ColorButton.AbsolutePosition.X and mousePos.X <= ColorButton.AbsolutePosition.X + ColorButton.AbsoluteSize.X and
-                    mousePos.Y >= ColorButton.AbsolutePosition.Y and mousePos.Y <= ColorButton.AbsolutePosition.Y + ColorButton.AbsoluteSize.Y) then
-                ColorFrame.Visible = false
-            end
-        end
-    end
-end)
 
 return library 
