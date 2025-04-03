@@ -15,17 +15,14 @@ function library:create_color_picker(parent, default_color, callback)
         BorderColor3 = Color3.fromRGB(0, 0, 0),
     }, parent)
     
-    -- Переносим picker_frame в game.CoreGui чтобы избежать проблем с наложением
-    local picker_parent = game:GetService("CoreGui")
-    
     local picker_frame = library:create("Frame", {
         Name = "PickerFrame",
         Size = UDim2.new(0, 200, 0, 220),
         BackgroundColor3 = Color3.fromRGB(25, 25, 25),
         BorderColor3 = Color3.fromRGB(0, 0, 0),
         Visible = false,
-        ZIndex = 9999, -- Максимальный ZIndex
-    }, picker_parent)
+        ZIndex = 100,
+    }, color_frame)
     
     -- Добавляем палитру цветов
     local color_palette = library:create("ImageLabel", {
@@ -35,7 +32,7 @@ function library:create_color_picker(parent, default_color, callback)
         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
         BorderColor3 = Color3.fromRGB(0, 0, 0),
         Image = "rbxassetid://698052001",
-        ZIndex = 10000,
+        ZIndex = 101,
     }, picker_frame)
     
     -- Добавляем слайдер оттенков
@@ -46,39 +43,13 @@ function library:create_color_picker(parent, default_color, callback)
         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
         BorderColor3 = Color3.fromRGB(0, 0, 0),
         Image = "rbxassetid://3641079629",
-        ZIndex = 10000,
+        ZIndex = 101,
     }, picker_frame)
     
-    -- Добавляем селекторы с высоким ZIndex
-    local color_selector = library:create("Frame", {
-        Name = "Selector",
-        Size = UDim2.new(0, 4, 0, 4),
-        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-        BorderColor3 = Color3.fromRGB(0, 0, 0),
-        Position = UDim2.new(0.5, 0, 0.5, 0),
-        ZIndex = 10001,
-    }, color_palette)
-    
-    local hue_selector = library:create("Frame", {
-        Name = "Slider",
-        Size = UDim2.new(0, 180, 0, 2),
-        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-        BorderColor3 = Color3.fromRGB(0, 0, 0),
-        Position = UDim2.new(0, 0, 0.5, 0),
-        ZIndex = 10001,
-    }, hue_slider)
-    
-    -- Функция для обновления позиции picker_frame относительно color_frame
-    local function update_position()
-        local abs_pos = color_frame.AbsolutePosition
-        local abs_size = color_frame.AbsoluteSize
-        picker_frame.Position = UDim2.new(0, abs_pos.X + abs_size.X + 5, 0, abs_pos.Y)
-    end
-    
     local function update_color()
-        local hue = 1 - (math.clamp(hue_selector.Position.Y.Scale, 0, 1))
-        local saturation = math.clamp(color_selector.Position.X.Scale, 0, 1)
-        local value = 1 - math.clamp(color_selector.Position.Y.Scale, 0, 1)
+        local hue = 1 - (math.clamp(hue_slider.Slider.Position.X.Scale, 0, 1))
+        local saturation = math.clamp(color_palette.Selector.Position.X.Scale, 0, 1)
+        local value = 1 - math.clamp(color_palette.Selector.Position.Y.Scale, 0, 1)
         
         local color = Color3.fromHSV(hue, saturation, value)
         color_frame.BackgroundColor3 = color
@@ -88,37 +59,12 @@ function library:create_color_picker(parent, default_color, callback)
         end
     end
     
-    -- Обновляем обработчики событий
+    -- Добавляем обработчики событий
     color_frame.MouseButton1Click:Connect(function()
-        update_position()
         picker_frame.Visible = not picker_frame.Visible
-        
-        -- Если открываем пикер, устанавливаем его поверх всех элементов
-        if picker_frame.Visible then
-            picker_frame.Parent = picker_parent
-        end
     end)
     
-    -- Добавляем обработчик для закрытия пикера при клике в другом месте
-    game:GetService("UserInputService").InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 and picker_frame.Visible then
-            local mouse_pos = game:GetService("UserInputService"):GetMouseLocation()
-            local frame_pos = picker_frame.AbsolutePosition
-            local frame_size = picker_frame.AbsoluteSize
-            
-            if mouse_pos.X < frame_pos.X or mouse_pos.X > frame_pos.X + frame_size.X or
-               mouse_pos.Y < frame_pos.Y or mouse_pos.Y > frame_pos.Y + frame_size.Y then
-                if not (mouse_pos.X >= color_frame.AbsolutePosition.X and 
-                       mouse_pos.X <= color_frame.AbsolutePosition.X + color_frame.AbsoluteSize.X and
-                       mouse_pos.Y >= color_frame.AbsolutePosition.Y and
-                       mouse_pos.Y <= color_frame.AbsolutePosition.Y + color_frame.AbsoluteSize.Y) then
-                    picker_frame.Visible = false
-                end
-            end
-        end
-    end)
-    
-    -- Сохраняем остальные обработчики, но обновляем их для корректной работы с ZIndex
+    -- Добавляем функционал перетаскивания для палитры и слайдера
     local dragging_palette = false
     local dragging_hue = false
     
@@ -134,36 +80,29 @@ function library:create_color_picker(parent, default_color, callback)
         end
     end)
     
-    game:GetService("UserInputService").InputEnded:Connect(function(input)
+    uis.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging_palette = false
             dragging_hue = false
         end
     end)
     
-    game:GetService("UserInputService").InputChanged:Connect(function(input)
+    uis.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement then
             if dragging_palette then
                 local relative_pos = input.Position - color_palette.AbsolutePosition
                 local x = math.clamp(relative_pos.X / color_palette.AbsoluteSize.X, 0, 1)
                 local y = math.clamp(relative_pos.Y / color_palette.AbsoluteSize.Y, 0, 1)
                 
-                color_selector.Position = UDim2.new(x, 0, y, 0)
+                color_palette.Selector.Position = UDim2.new(x, 0, y, 0)
                 update_color()
             end
             
             if dragging_hue then
-                local relative_y = input.Position.Y - hue_slider.AbsolutePosition.Y
-                local y = math.clamp(relative_y / hue_slider.AbsoluteSize.Y, 0, 1)
+                local relative_x = input.Position.X - hue_slider.AbsolutePosition.X
+                local x = math.clamp(relative_x / hue_slider.AbsoluteSize.X, 0, 1)
                 
-                hue_selector.Position = UDim2.new(0, 0, y, 0)
-                
-                local hue = 1 - y
-                local h, s, v = color_frame.BackgroundColor3:ToHSV()
-                local color = Color3.fromHSV(hue, s, v)
-                
-                color_frame.BackgroundColor3 = color
-                color_palette.BackgroundColor3 = Color3.fromHSV(hue, 1, 1)
+                hue_slider.Slider.Position = UDim2.new(x, 0, 0.5, 0)
                 update_color()
             end
         end
@@ -172,9 +111,8 @@ function library:create_color_picker(parent, default_color, callback)
     function color_picker:set_color(color)
         local h, s, v = color:ToHSV()
         
-        hue_selector.Position = UDim2.new(0, 0, 1 - h, 0)
-        color_selector.Position = UDim2.new(s, 0, 1 - v, 0)
-        color_palette.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
+        hue_slider.Slider.Position = UDim2.new(1 - h, 0, 0.5, 0)
+        color_palette.Selector.Position = UDim2.new(s, 0, 1 - v, 0)
         
         color_frame.BackgroundColor3 = color
         
@@ -1409,7 +1347,7 @@ end
                             TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
                             BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
                             Visible = false,
-                            ZIndex = 2,
+                            ZIndex = 50,
                         }, Dropdown)
 
                         local UIListLayout = library:create("UIListLayout", {
@@ -1489,7 +1427,7 @@ end
                                 AutoButtonColor = false,
                                 Font = Enum.Font.SourceSans,
                                 Text = "",
-                                ZIndex = 2,
+                                ZIndex = 51,
                             }, DropdownScroll)
 
                             local ButtonText = library:create("TextLabel", {
@@ -1502,7 +1440,7 @@ end
                                 TextColor3 = Color3.fromRGB(150, 150, 150),
                                 TextSize = 14,
                                 TextXAlignment = Enum.TextXAlignment.Left,
-                                ZIndex = 2,
+                                ZIndex = 51,
                             }, Button)
 
                             local Decoration = library:create("Frame", {
@@ -1615,7 +1553,7 @@ end
                             TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
                             BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
                             Visible = false,
-                            ZIndex = 2,
+                            ZIndex = 50,
                         }, Dropdown)
 
                         local UIListLayout = library:create("UIListLayout", {
@@ -1738,7 +1676,7 @@ end
                                 AutoButtonColor = false,
                                 Font = Enum.Font.SourceSans,
                                 Text = "",
-                                ZIndex = 2,
+                                ZIndex = 51,
                             }, DropdownScroll)
 
                             local ButtonText = library:create("TextLabel", {
@@ -1751,7 +1689,7 @@ end
                                 TextColor3 = Color3.fromRGB(150, 150, 150),
                                 TextSize = 14,
                                 TextXAlignment = Enum.TextXAlignment.Left,
-                                ZIndex = 2,
+                                ZIndex = 51,
                             }, Button)
 
                             local Decoration = library:create("Frame", {
@@ -2313,179 +2251,6 @@ end
     end
 
     return menu
-end
-
--- Исправляем функцию для создания выпадающих меню
-function element:add_dropdown(info, callback)
-    local dropdown = {}
-    dropdown.options = info.options or {}
-    dropdown.default = info.default or dropdown.options[1] or ""
-    dropdown.current = dropdown.default
-    callback = callback or function() end
-    
-    local dropdown_frame = library:create("Frame", {
-        Name = "Dropdown",
-        Size = UDim2.new(1, 0, 0, 20),
-        BackgroundColor3 = Color3.fromRGB(30, 30, 30),
-        BorderColor3 = Color3.fromRGB(0, 0, 0),
-        Parent = self.container
-    })
-    
-    local dropdown_text = library:create("TextLabel", {
-        Name = "DropdownText",
-        Size = UDim2.new(1, -20, 1, 0),
-        BackgroundTransparency = 1,
-        Text = dropdown.default,
-        TextColor3 = Color3.fromRGB(255, 255, 255),
-        TextSize = 14,
-        Font = Enum.Font.SourceSans,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Parent = dropdown_frame
-    })
-    
-    local dropdown_button = library:create("TextButton", {
-        Name = "DropdownButton",
-        Size = UDim2.new(0, 20, 0, 20),
-        Position = UDim2.new(1, -20, 0, 0),
-        BackgroundTransparency = 1,
-        Text = "▼",
-        TextColor3 = Color3.fromRGB(255, 255, 255),
-        TextSize = 14,
-        Font = Enum.Font.SourceSans,
-        Parent = dropdown_frame
-    })
-    
-    -- Используем game.CoreGui для создания выпадающего меню, чтобы избежать наложения
-    local picker_parent = game:GetService("CoreGui")
-    
-    local options_frame = library:create("Frame", {
-        Name = "OptionsFrame",
-        Size = UDim2.new(0, dropdown_frame.AbsoluteSize.X, 0, 0),
-        BackgroundColor3 = Color3.fromRGB(40, 40, 40),
-        BorderColor3 = Color3.fromRGB(0, 0, 0),
-        Visible = false,
-        ZIndex = 9999,
-        Parent = picker_parent
-    })
-    
-    -- Функция для обновления позиции options_frame
-    local function update_position()
-        options_frame.Size = UDim2.new(0, dropdown_frame.AbsoluteSize.X, 0, #dropdown.options * 25)
-        local abs_pos = dropdown_frame.AbsolutePosition
-        local abs_size = dropdown_frame.AbsoluteSize
-        options_frame.Position = UDim2.new(0, abs_pos.X, 0, abs_pos.Y + abs_size.Y)
-    end
-    
-    -- Функция для обновления списка опций
-    local function update_options()
-        -- Удаляем существующие опции
-        for _, child in pairs(options_frame:GetChildren()) do
-            if child:IsA("TextButton") then
-                child:Destroy()
-            end
-        end
-        
-        -- Добавляем новые опции
-        for i, option in ipairs(dropdown.options) do
-            local option_button = library:create("TextButton", {
-                Name = "Option_" .. i,
-                Size = UDim2.new(1, 0, 0, 25),
-                Position = UDim2.new(0, 0, 0, (i-1) * 25),
-                BackgroundColor3 = Color3.fromRGB(40, 40, 40),
-                BorderColor3 = Color3.fromRGB(30, 30, 30),
-                Text = option,
-                TextColor3 = Color3.fromRGB(255, 255, 255),
-                TextSize = 14,
-                Font = Enum.Font.SourceSans,
-                ZIndex = 10000,
-                Parent = options_frame
-            })
-            
-            option_button.MouseButton1Click:Connect(function()
-                dropdown.current = option
-                dropdown_text.Text = option
-                options_frame.Visible = false
-                
-                library:tween(option_button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)})
-                library:tween(option_button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, false, 0.2), {BackgroundColor3 = Color3.fromRGB(40, 40, 40)})
-                
-                callback({Dropdown = option})
-            end)
-            
-            option_button.MouseEnter:Connect(function()
-                library:tween(option_button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 50, 50)})
-            end)
-            
-            option_button.MouseLeave:Connect(function()
-                library:tween(option_button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(40, 40, 40)})
-            end)
-        end
-        
-        update_position()
-    end
-    
-    dropdown_button.MouseButton1Click:Connect(function()
-        update_options()
-        options_frame.Visible = not options_frame.Visible
-        
-        -- Если открываем дропдаун, устанавливаем его поверх всех элементов
-        if options_frame.Visible then
-            options_frame.Parent = picker_parent
-        end
-    end)
-    
-    dropdown_frame.MouseButton1Click:Connect(function()
-        update_options()
-        options_frame.Visible = not options_frame.Visible
-        
-        -- Если открываем дропдаун, устанавливаем его поверх всех элементов
-        if options_frame.Visible then
-            options_frame.Parent = picker_parent
-        end
-    end)
-    
-    -- Добавляем обработчик для закрытия дропдауна при клике в другом месте
-    game:GetService("UserInputService").InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 and options_frame.Visible then
-            local mouse_pos = game:GetService("UserInputService"):GetMouseLocation()
-            local frame_pos = options_frame.AbsolutePosition
-            local frame_size = options_frame.AbsoluteSize
-            
-            if mouse_pos.X < frame_pos.X or mouse_pos.X > frame_pos.X + frame_size.X or
-               mouse_pos.Y < frame_pos.Y or mouse_pos.Y > frame_pos.Y + frame_size.Y then
-                if not (mouse_pos.X >= dropdown_frame.AbsolutePosition.X and 
-                       mouse_pos.X <= dropdown_frame.AbsolutePosition.X + dropdown_frame.AbsoluteSize.X and
-                       mouse_pos.Y >= dropdown_frame.AbsolutePosition.Y and
-                       mouse_pos.Y <= dropdown_frame.AbsolutePosition.Y + dropdown_frame.AbsoluteSize.Y) then
-                    options_frame.Visible = false
-                end
-            end
-        end
-    end)
-    
-    function dropdown:set_value(value)
-        dropdown.current = value
-        dropdown_text.Text = value
-        callback({Dropdown = value})
-    end
-    
-    function dropdown:add_option(option)
-        table.insert(dropdown.options, option)
-        update_options()
-    end
-    
-    function dropdown:remove_option(option)
-        for i, opt in ipairs(dropdown.options) do
-            if opt == option then
-                table.remove(dropdown.options, i)
-                break
-            end
-        end
-        update_options()
-    end
-    
-    update_options()
-    return dropdown
 end
 
 return library 
