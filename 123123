@@ -2309,4 +2309,83 @@ end
     return menu
 end
 
+function element:create_dropdown(options, callback)
+    local dropdown = {}
+    
+    local DropdownButton = library:create("TextButton", {
+        Name = "DropdownButton",
+        BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+        BorderColor3 = Color3.fromRGB(0, 0, 0),
+        Position = UDim2.new(0, 9, 0, 20),
+        Size = UDim2.new(0, 260, 0, 20),
+        AutoButtonColor = false,
+        Text = "",
+        ZIndex = 10000
+    })
+
+    local DropdownText = library:create("TextLabel", {
+        Name = "DropdownText",
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 6, 0, 0),
+        Size = UDim2.new(1, -12, 1, 0),
+        Font = Enum.Font.Ubuntu,
+        Text = options[1],
+        TextColor3 = Color3.fromRGB(150, 150, 150),
+        TextSize = 14,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 10001,
+        Parent = DropdownButton
+    })
+
+    local DropdownContainer = library:create("Frame", {
+        Name = "DropdownContainer",
+        BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+        BorderColor3 = Color3.fromRGB(0, 0, 0),
+        Position = UDim2.new(0, 0, 1, 2),
+        Size = UDim2.new(1, 0, 0, #options * 20),
+        Visible = false,
+        ZIndex = 10002,
+        Parent = DropdownButton
+    })
+
+    for i, option in ipairs(options) do
+        local OptionButton = library:create("TextButton", {
+            Name = option,
+            BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+            BorderSizePixel = 0,
+            Position = UDim2.new(0, 0, 0, (i-1) * 20),
+            Size = UDim2.new(1, 0, 0, 20),
+            AutoButtonColor = false,
+            Font = Enum.Font.Ubuntu,
+            Text = option,
+            TextColor3 = Color3.fromRGB(150, 150, 150),
+            TextSize = 14,
+            ZIndex = 10003,
+            Parent = DropdownContainer
+        })
+
+        OptionButton.MouseEnter:Connect(function()
+            library:tween(OptionButton, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(255, 255, 255)})
+        end)
+
+        OptionButton.MouseLeave:Connect(function()
+            library:tween(OptionButton, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(150, 150, 150)})
+        end)
+
+        OptionButton.MouseButton1Click:Connect(function()
+            DropdownText.Text = option
+            DropdownContainer.Visible = false
+            if callback then
+                callback(option)
+            end
+        end)
+    end
+
+    DropdownButton.MouseButton1Click:Connect(function()
+        DropdownContainer.Visible = not DropdownContainer.Visible
+    end)
+
+    return dropdown
+end
+
 return library 
