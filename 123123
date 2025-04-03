@@ -343,7 +343,7 @@ function library.new(library_title, cfg_location)
         return menu.open
     end
     function menu.SetOpen(State)
-        ScreenGui.Enabled = State
+        ScreenGui.Enabled = state
     end
 
     uis.InputBegan:Connect(function(key)
@@ -1355,7 +1355,7 @@ end
                             BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
                             Visible = false,
                             ZIndex = 2,
-                        }, game:GetService("CoreGui"):FindFirstChild("unknown"))
+                        }, Dropdown)
 
                         local UIListLayout = library:create("UIListLayout", {
                             HorizontalAlignment = Enum.HorizontalAlignment.Center,
@@ -1375,11 +1375,18 @@ end
                         local in_drop = false
                         local in_drop2 = false
                         local dropdown_open = false
-                        
-                        -- Используем функцию setupDropdownHandlers для настройки обработчиков
-                        setupDropdownHandlers(DropdownButton, DropdownScroll, DropdownText, DropdownButtonText)
-                        
-                        -- Добавляем дополнительные обработчики для отслеживания наведения мыши
+                        DropdownButton.MouseButton1Down:Connect(function()
+                            DropdownScroll.Visible = not DropdownScroll.Visible
+                            dropdown_open = DropdownScroll.Visible
+
+                            if not dropdown_open then
+                                library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
+                                library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
+                            else
+                                library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)})
+                                library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)})
+                            end
+                        end)
                         Dropdown.MouseEnter:Connect(function()
                             in_drop = true
                         end)
@@ -1516,7 +1523,7 @@ end
                             Position = UDim2.new(0, 6, 0, 0),
                             Size = UDim2.new(0, 250, 1, 0),
                             Font = Enum.Font.Ubuntu,
-                            Text = "...", -- Устанавливаем начальный текст, затем обновим его через update_text
+                            Text = value.Dropdown,
                             TextColor3 = Color3.fromRGB(150, 150, 150),
                             TextSize = 14,
                             TextXAlignment = Enum.TextXAlignment.Left,
@@ -1554,7 +1561,7 @@ end
                             BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
                             Visible = false,
                             ZIndex = 2,
-                        }, game:GetService("CoreGui"):FindFirstChild("unknown"))
+                        }, Dropdown)
 
                         local UIListLayout = library:create("UIListLayout", {
                             HorizontalAlignment = Enum.HorizontalAlignment.Center,
@@ -1574,11 +1581,18 @@ end
                         local in_drop = false
                         local in_drop2 = false
                         local dropdown_open = false
-                        
-                        -- Используем функцию setupDropdownHandlers для настройки обработчиков
-                        setupDropdownHandlers(DropdownButton, DropdownScroll, DropdownText, DropdownButtonText)
-                        
-                        -- Добавляем дополнительные обработчики для отслеживания наведения мыши
+                        DropdownButton.MouseButton1Down:Connect(function()
+                            DropdownScroll.Visible = not DropdownScroll.Visible
+                            dropdown_open = DropdownScroll.Visible
+
+                            if not dropdown_open then
+                                library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
+                                library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
+                            else
+                                library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)})
+                                library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)})
+                            end
+                        end)
                         Dropdown.MouseEnter:Connect(function()
                             in_drop = true
                         end)
@@ -1727,10 +1741,6 @@ end
                                 dropdown_is_first = false
                             end
                         end
-                        
-                        -- Вызываем update_text для установки начального текста
-                        element.update_text()
-                        
                         element:set_value(value, true)
                     elseif type == "Button" then
                         Border.Size = Border.Size + UDim2.new(0, 0, 0, 30)
@@ -2283,113 +2293,6 @@ game:GetService("UserInputService").InputBegan:Connect(function(input)
                not (mousePos.X >= ColorButton.AbsolutePosition.X and mousePos.X <= ColorButton.AbsolutePosition.X + ColorButton.AbsoluteSize.X and
                     mousePos.Y >= ColorButton.AbsolutePosition.Y and mousePos.Y <= ColorButton.AbsolutePosition.Y + ColorButton.AbsoluteSize.Y) then
                 ColorFrame.Visible = false
-            end
-        end
-    end
-end)
-
--- Локальные переменные для хранения ссылок на выпадающие списки
-local activeDropdowns = {}
-
--- Функция для создания обработчиков для каждого выпадающего списка
-local function setupDropdownHandlers(DropdownButton, DropdownScroll, DropdownText, DropdownButtonText)
-    -- Добавляем в таблицу активных выпадающих списков
-    table.insert(activeDropdowns, {
-        button = DropdownButton,
-        scroll = DropdownScroll,
-        text = DropdownText,
-        buttonText = DropdownButtonText,
-        open = false
-    })
-    
-    -- Создаем функцию обновления позиции для конкретного выпадающего списка
-    local function updatePosition()
-        if DropdownScroll and DropdownScroll.Visible then
-            local buttonPos = DropdownButton.AbsolutePosition
-            local buttonSize = DropdownButton.AbsoluteSize
-            
-            DropdownScroll.Position = UDim2.new(0, buttonPos.X, 0, buttonPos.Y + buttonSize.Y + 1)
-        end
-    end
-    
-    -- Обработчик клика по кнопке
-    DropdownButton.MouseButton1Down:Connect(function()
-        DropdownScroll.Visible = not DropdownScroll.Visible
-        local dropdown_open = DropdownScroll.Visible
-        
-        -- Обновляем состояние в таблице активных выпадающих списков
-        for _, dropdown in ipairs(activeDropdowns) do
-            if dropdown.button == DropdownButton then
-                dropdown.open = dropdown_open
-            end
-        end
-        
-        if DropdownScroll.Visible then
-            updatePosition()
-        end
-
-        if not dropdown_open then
-            if DropdownText then
-                library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
-            end
-            if DropdownButtonText then
-                library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
-            end
-        else
-            if DropdownText then
-                library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)})
-            end
-            if DropdownButtonText then
-                library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)})
-            end
-        end
-    end)
-    
-    -- Добавляем обновление позиции при рендеринге
-    local renderConnection = game:GetService("RunService").RenderStepped:Connect(updatePosition)
-    
-    -- Добавляем обновление позиции при прокрутке
-    local inputConnection = game:GetService("UserInputService").InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseWheel then
-            updatePosition()
-        end
-    end)
-    
-    -- Возвращаем функцию отключения обработчиков (для очистки)
-    return function()
-        renderConnection:Disconnect()
-        inputConnection:Disconnect()
-    end
-end
-
--- Глобальный обработчик для закрытия выпадающих списков при клике вне их области
-game:GetService("UserInputService").InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        local mousePos = game:GetService("UserInputService"):GetMouseLocation()
-        
-        for _, dropdown in ipairs(activeDropdowns) do
-            local DropdownButton = dropdown.button
-            local DropdownScroll = dropdown.scroll
-            local DropdownText = dropdown.text
-            local DropdownButtonText = dropdown.buttonText
-            
-            if DropdownScroll and DropdownScroll.Visible then
-                local framePos = DropdownScroll.AbsolutePosition
-                local frameSize = DropdownScroll.AbsoluteSize
-                
-                if not (mousePos.X >= framePos.X and mousePos.X <= framePos.X + frameSize.X and
-                       mousePos.Y >= framePos.Y and mousePos.Y <= framePos.Y + frameSize.Y) and
-                   not (mousePos.X >= DropdownButton.AbsolutePosition.X and mousePos.X <= DropdownButton.AbsolutePosition.X + DropdownButton.AbsoluteSize.X and
-                        mousePos.Y >= DropdownButton.AbsolutePosition.Y and mousePos.Y <= DropdownButton.AbsolutePosition.Y + DropdownButton.AbsoluteSize.Y) then
-                    DropdownScroll.Visible = false
-                    dropdown.open = false
-                    if DropdownText then
-                        library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
-                    end
-                    if DropdownButtonText then
-                        library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
-                    end
-                end
             end
         end
     end
