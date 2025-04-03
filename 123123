@@ -11,18 +11,21 @@ function library:create_color_picker(parent, default_color, callback)
     local color_frame = library:create("Frame", {
         Name = "ColorPicker",
         Size = UDim2.new(0, 30, 0, 15),
+        Position = UDim2.new(1, -35, 0.5, -7), -- Позиционируем справа от родительского элемента
         BackgroundColor3 = default_color or Color3.fromRGB(255, 255, 255),
         BorderColor3 = Color3.fromRGB(0, 0, 0),
     }, parent)
     
+    -- Создаем picker_frame в game.CoreGUI или на верхнем уровне интерфейса, а не как дочерний элемент
     local picker_frame = library:create("Frame", {
         Name = "PickerFrame",
         Size = UDim2.new(0, 200, 0, 220),
+        Position = UDim2.new(0, 0, 0, 0), -- Позиция будет установлена динамически
         BackgroundColor3 = Color3.fromRGB(25, 25, 25),
         BorderColor3 = Color3.fromRGB(0, 0, 0),
         Visible = false,
         ZIndex = 100,
-    }, color_frame)
+    }, game:GetService("CoreGui"))
     
     -- Добавляем палитру цветов
     local color_palette = library:create("ImageLabel", {
@@ -35,6 +38,16 @@ function library:create_color_picker(parent, default_color, callback)
         ZIndex = 101,
     }, picker_frame)
     
+    -- Создаем селектор для палитры
+    local color_selector = library:create("Frame", {
+        Name = "Selector",
+        Size = UDim2.new(0, 4, 0, 4),
+        Position = UDim2.new(0.5, 0, 0.5, 0),
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        BorderColor3 = Color3.fromRGB(0, 0, 0),
+        ZIndex = 102,
+    }, color_palette)
+    
     -- Добавляем слайдер оттенков
     local hue_slider = library:create("ImageLabel", {
         Name = "HueSlider", 
@@ -46,22 +59,56 @@ function library:create_color_picker(parent, default_color, callback)
         ZIndex = 101,
     }, picker_frame)
     
+    -- Создаем слайдер для hue
+    local hue_selector = library:create("Frame", {
+        Name = "Slider", 
+        Size = UDim2.new(0, 4, 1, 0),
+        Position = UDim2.new(0.5, 0, 0, 0),
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        BorderColor3 = Color3.fromRGB(0, 0, 0),
+        ZIndex = 102,
+    }, hue_slider)
+    
     local function update_color()
-        local hue = 1 - (math.clamp(hue_slider.Slider.Position.X.Scale, 0, 1))
-        local saturation = math.clamp(color_palette.Selector.Position.X.Scale, 0, 1)
-        local value = 1 - math.clamp(color_palette.Selector.Position.Y.Scale, 0, 1)
+        local hue = 1 - (math.clamp(hue_selector.Position.X.Scale, 0, 1))
+        local saturation = math.clamp(color_selector.Position.X.Scale, 0, 1)
+        local value = 1 - math.clamp(color_selector.Position.Y.Scale, 0, 1)
         
         local color = Color3.fromHSV(hue, saturation, value)
         color_frame.BackgroundColor3 = color
         
         if callback then
-            callback(color)
+            callback({Color = color})
         end
     end
     
     -- Добавляем обработчики событий
     color_frame.MouseButton1Click:Connect(function()
+        -- Устанавливаем позицию picker_frame рядом с color_frame
+        local pos = color_frame.AbsolutePosition
+        picker_frame.Position = UDim2.new(0, pos.X + color_frame.AbsoluteSize.X + 5, 0, pos.Y)
         picker_frame.Visible = not picker_frame.Visible
+    end)
+    
+    -- Добавляем закрытие picker_frame при клике за его пределами
+    game:GetService("UserInputService").InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 and picker_frame.Visible then
+            local mouse_pos = game:GetService("UserInputService"):GetMouseLocation()
+            local picker_pos = picker_frame.AbsolutePosition
+            local picker_size = picker_frame.AbsoluteSize
+            
+            -- Если клик вне picker_frame и не на color_frame
+            if mouse_pos.X < picker_pos.X or mouse_pos.X > picker_pos.X + picker_size.X or
+               mouse_pos.Y < picker_pos.Y or mouse_pos.Y > picker_pos.Y + picker_size.Y then
+                
+                if not (mouse_pos.X >= color_frame.AbsolutePosition.X and
+                        mouse_pos.X <= color_frame.AbsolutePosition.X + color_frame.AbsoluteSize.X and
+                        mouse_pos.Y >= color_frame.AbsolutePosition.Y and
+                        mouse_pos.Y <= color_frame.AbsolutePosition.Y + color_frame.AbsoluteSize.Y) then
+                    picker_frame.Visible = false
+                end
+            end
+        end
     end)
     
     -- Добавляем функционал перетаскивания для палитры и слайдера
@@ -80,21 +127,21 @@ function library:create_color_picker(parent, default_color, callback)
         end
     end)
     
-    uis.InputEnded:Connect(function(input)
+    game:GetService("UserInputService").InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging_palette = false
             dragging_hue = false
         end
     end)
     
-    uis.InputChanged:Connect(function(input)
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement then
             if dragging_palette then
                 local relative_pos = input.Position - color_palette.AbsolutePosition
                 local x = math.clamp(relative_pos.X / color_palette.AbsoluteSize.X, 0, 1)
                 local y = math.clamp(relative_pos.Y / color_palette.AbsoluteSize.Y, 0, 1)
                 
-                color_palette.Selector.Position = UDim2.new(x, 0, y, 0)
+                color_selector.Position = UDim2.new(x, 0, y, 0)
                 update_color()
             end
             
@@ -102,22 +149,31 @@ function library:create_color_picker(parent, default_color, callback)
                 local relative_x = input.Position.X - hue_slider.AbsolutePosition.X
                 local x = math.clamp(relative_x / hue_slider.AbsoluteSize.X, 0, 1)
                 
-                hue_slider.Slider.Position = UDim2.new(x, 0, 0.5, 0)
+                hue_selector.Position = UDim2.new(x, 0, 0, 0)
                 update_color()
             end
         end
     end)
     
+    -- Инициализация начальных значений
+    if default_color then
+        local h, s, v = default_color:ToHSV()
+        hue_selector.Position = UDim2.new(1 - h, 0, 0, 0)
+        color_selector.Position = UDim2.new(s, 0, 1 - v, 0)
+        color_palette.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
+    end
+    
     function color_picker:set_color(color)
         local h, s, v = color:ToHSV()
         
-        hue_slider.Slider.Position = UDim2.new(1 - h, 0, 0.5, 0)
-        color_palette.Selector.Position = UDim2.new(s, 0, 1 - v, 0)
+        hue_selector.Position = UDim2.new(1 - h, 0, 0, 0)
+        color_selector.Position = UDim2.new(s, 0, 1 - v, 0)
+        color_palette.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
         
         color_frame.BackgroundColor3 = color
         
         if callback then
-            callback(color)
+            callback({Color = color})
         end
     end
     
