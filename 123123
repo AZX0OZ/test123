@@ -1347,8 +1347,36 @@ end
                             TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
                             BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
                             Visible = false,
-                            ZIndex = 50,
+                            ZIndex = 9999, -- Значительно увеличиваем Z-Index
                         }, Dropdown)
+
+                        -- Добавляем затемняющий фон
+                        local DropdownBackground = library:create("Frame", {
+                            Name = "DropdownBackground",
+                            BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+                            BackgroundTransparency = 0.5,
+                            BorderSizePixel = 0,
+                            Position = UDim2.new(0, 0, 0, 0),
+                            Size = UDim2.new(1, 0, 1, 0),
+                            Visible = false,
+                            ZIndex = 9998, -- Чуть меньше чем у самого дропдауна
+                        }, Dropdown)
+
+                        -- Обновляем Z-Index для всех элементов внутри dropdown
+                        for _, v in pairs(DropdownScroll:GetChildren()) do
+                            if v:IsA("TextButton") then
+                                v.ZIndex = 10000
+                                v.TextLabel.ZIndex = 10000
+                                if v:FindFirstChild("ButtonText") then
+                                    v.ButtonText.ZIndex = 10000
+                                end
+                            end
+                        end
+
+                        -- Обновляем видимость фона вместе с дропдауном
+                        DropdownScroll:GetPropertyChangedSignal("Visible"):Connect(function()
+                            DropdownBackground.Visible = DropdownScroll.Visible
+                        end)
 
                         local UIListLayout = library:create("UIListLayout", {
                             HorizontalAlignment = Enum.HorizontalAlignment.Center,
@@ -1553,8 +1581,36 @@ end
                             TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
                             BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
                             Visible = false,
-                            ZIndex = 50,
+                            ZIndex = 9999, -- Значительно увеличиваем Z-Index
                         }, Dropdown)
+
+                        -- Добавляем затемняющий фон
+                        local DropdownBackground = library:create("Frame", {
+                            Name = "DropdownBackground",
+                            BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+                            BackgroundTransparency = 0.5,
+                            BorderSizePixel = 0,
+                            Position = UDim2.new(0, 0, 0, 0),
+                            Size = UDim2.new(1, 0, 1, 0),
+                            Visible = false,
+                            ZIndex = 9998, -- Чуть меньше чем у самого дропдауна
+                        }, Dropdown)
+
+                        -- Обновляем Z-Index для всех элементов внутри dropdown
+                        for _, v in pairs(DropdownScroll:GetChildren()) do
+                            if v:IsA("TextButton") then
+                                v.ZIndex = 10000
+                                v.TextLabel.ZIndex = 10000
+                                if v:FindFirstChild("ButtonText") then
+                                    v.ButtonText.ZIndex = 10000
+                                end
+                            end
+                        end
+
+                        -- Обновляем видимость фона вместе с дропдауном
+                        DropdownScroll:GetPropertyChangedSignal("Visible"):Connect(function()
+                            DropdownBackground.Visible = DropdownScroll.Visible
+                        end)
 
                         local UIListLayout = library:create("UIListLayout", {
                             HorizontalAlignment = Enum.HorizontalAlignment.Center,
