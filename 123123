@@ -11,22 +11,32 @@ function library:create_color_picker(parent, default_color, callback)
     local color_frame = library:create("Frame", {
         Name = "ColorPicker",
         Size = UDim2.new(0, 30, 0, 15),
-        Position = UDim2.new(1, -40, 0.5, -7), -- Позиционируем справа от элемента
+        Position = UDim2.new(1, -35, 0.5, -7),
         BackgroundColor3 = default_color or Color3.fromRGB(255, 255, 255),
         BorderColor3 = Color3.fromRGB(0, 0, 0),
+        ZIndex = 50, -- Увеличиваем z-index
     }, parent)
     
     local picker_frame = library:create("Frame", {
         Name = "PickerFrame",
         Size = UDim2.new(0, 200, 0, 220),
-        Position = UDim2.new(1, 10, 0, 0), -- Отображаем справа от color_frame
+        Position = UDim2.new(1, 5, 0, 0),
         BackgroundColor3 = Color3.fromRGB(25, 25, 25),
         BorderColor3 = Color3.fromRGB(0, 0, 0),
         Visible = false,
-        ZIndex = 100,
+        ZIndex = 60, -- Увеличиваем z-index
     }, color_frame)
     
-    -- Добавляем палитру цветов
+    -- Добавляем белый фон для перекрытия элементов под color picker'ом
+    local background = library:create("Frame", {
+        Name = "Background",
+        Size = UDim2.new(1, 0, 1, 0),
+        BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+        BorderSizePixel = 0,
+        ZIndex = 55, -- Между color_frame и picker_frame
+    }, picker_frame)
+
+    -- Обновляем z-index для всех элементов color picker'а
     local color_palette = library:create("ImageLabel", {
         Name = "ColorPalette",
         Size = UDim2.new(0, 180, 0, 180),
@@ -34,18 +44,8 @@ function library:create_color_picker(parent, default_color, callback)
         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
         BorderColor3 = Color3.fromRGB(0, 0, 0),
         Image = "rbxassetid://698052001",
-        ZIndex = 101,
+        ZIndex = 65,
     }, picker_frame)
-    
-    -- Добавляем селектор для палитры
-    local color_selector = library:create("Frame", {
-        Name = "Selector",
-        Size = UDim2.new(0, 4, 0, 4),
-        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-        BorderColor3 = Color3.fromRGB(0, 0, 0),
-        Position = UDim2.new(0.5, 0, 0.5, 0),
-        ZIndex = 102,
-    }, color_palette)
     
     -- Добавляем слайдер оттенков
     local hue_slider = library:create("ImageLabel", {
@@ -57,16 +57,6 @@ function library:create_color_picker(parent, default_color, callback)
         Image = "rbxassetid://3641079629",
         ZIndex = 101,
     }, picker_frame)
-    
-    -- Добавляем ползунок для слайдера
-    local hue_selector = library:create("Frame", {
-        Name = "Slider",
-        Size = UDim2.new(0, 4, 1, 0),
-        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-        BorderColor3 = Color3.fromRGB(0, 0, 0),
-        Position = UDim2.new(0, 0, 0, 0),
-        ZIndex = 102,
-    }, hue_slider)
     
     local function update_color()
         local hue = 1 - (math.clamp(hue_slider.Slider.Position.X.Scale, 0, 1))
@@ -142,6 +132,20 @@ function library:create_color_picker(parent, default_color, callback)
             callback(color)
         end
     end
+    
+    -- Добавляем обработку клика вне color picker'а для его закрытия
+    game:GetService("UserInputService").InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            local mouse = game:GetService("Players").LocalPlayer:GetMouse()
+            if not (mouse.X >= picker_frame.AbsolutePosition.X and
+                   mouse.X <= picker_frame.AbsolutePosition.X + picker_frame.AbsoluteSize.X and
+                   mouse.Y >= picker_frame.AbsolutePosition.Y and
+                   mouse.Y <= picker_frame.AbsolutePosition.Y + picker_frame.AbsoluteSize.Y) and
+               picker_frame.Visible then
+                picker_frame.Visible = false
+            end
+        end
+    end)
     
     return color_picker
 end
@@ -1359,18 +1363,17 @@ end
 
                         local DropdownScroll = library:create("ScrollingFrame", {
                             Name = "DropdownScroll",
-                            Position = UDim2.new(0, 0, 1, 5), -- Позиционируем под элементом с небольшим отступом
-                            Size = UDim2.new(0, 260, 0, 20 * options_num),
+                            Active = true,
                             BackgroundColor3 = Color3.fromRGB(25, 25, 25),
                             BorderColor3 = Color3.fromRGB(0, 0, 0),
-                            ScrollBarThickness = 2,
-                            ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255),
-                            BottomImage = "",
+                            Position = UDim2.new(0, 9, 0, 41),
+                            Size = UDim2.new(0, 260, 0, 20),
                             CanvasSize = UDim2.new(0, 0, 0, 0),
-                            MidImage = "",
-                            TopImage = "",
+                            ScrollBarThickness = 2,
+                            TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
+                            BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
                             Visible = false,
-                            ZIndex = 100, -- Увеличиваем ZIndex чтобы не перекрывался другими элементами
+                            ZIndex = 2,
                         }, Dropdown)
 
                         local UIListLayout = library:create("UIListLayout", {
@@ -1566,19 +1569,18 @@ end
 
                         local DropdownScroll = library:create("ScrollingFrame", {
                             Name = "DropdownScroll",
-                            Position = UDim2.new(0, 0, 1, 5), -- Позиционируем под элементом с небольшим отступом
-                            Size = UDim2.new(0, 260, 0, 20 * options_num),
+                            Active = true,
                             BackgroundColor3 = Color3.fromRGB(25, 25, 25),
                             BorderColor3 = Color3.fromRGB(0, 0, 0),
-                            ScrollBarThickness = 2,
-                            ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255),
-                            BottomImage = "",
+                            Position = UDim2.new(0, 9, 0, 41),
+                            Size = UDim2.new(0, 260, 0, 20),
                             CanvasSize = UDim2.new(0, 0, 0, 0),
-                            MidImage = "",
-                            TopImage = "",
+                            ScrollBarThickness = 2,
+                            TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
+                            BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
                             Visible = false,
-                            ZIndex = 100, -- Увеличиваем ZIndex чтобы не перекрывался другими элементами
-                        }, DropdownButton)
+                            ZIndex = 2,
+                        }, Dropdown)
 
                         local UIListLayout = library:create("UIListLayout", {
                             HorizontalAlignment = Enum.HorizontalAlignment.Center,
