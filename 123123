@@ -25,17 +25,17 @@ library.setupColorPickerHandling = function()
 end
 library.setupColorPickerHandling()
 
--- Создаем глобальный обработчик для всех ColorPicker
-library.setupColorPickerEvents = function()
-    if not library.colorPickerInputConnection then
-        library.colorPickerInputConnection = uis.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                -- Обработка будет добавлена отдельно для каждого ColorPicker
-            end
-        end)
-    end
-end
-library.setupColorPickerEvents()
+-- Убираем дублирующийся обработчик
+--library.setupColorPickerEvents = function()
+--    if not library.colorPickerInputConnection then
+--        library.colorPickerInputConnection = uis.InputBegan:Connect(function(input)
+--            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+--                -- Обработка будет добавлена отдельно для каждого ColorPicker
+--            end
+--        end)
+--    end
+--end
+--library.setupColorPickerEvents()
 
 function library:create(Object, Properties, Parent)
     local Obj = Instance.new(Object)
@@ -402,7 +402,7 @@ end
 
             num_sections += 1
 
-            menu.values[tab.tab_num][section_name] = {}
+            menu.values[tab.tab_num] = {}
 
             local SectionButton = library:create("TextButton", {
                 Name = "SectionButton",
@@ -913,17 +913,18 @@ end
                                 TextXAlignment = Enum.TextXAlignment.Right,
                             }, ToggleButton)
 
+                            -- Фрейм с цветовой палитрой (будет перемещен в центр экрана при клике)
                             local ColorFrame = library:create("Frame", {
-                                Name = "ColorFrame",
-                                Parent = ColorButton,
+                                Name = "ColorFrame" .. index,
                                 BackgroundColor3 = Color3.fromRGB(10, 10, 10),
                                 BorderColor3 = Color3.fromRGB(0, 0, 0),
-                                Position = UDim2.new(1, 5, 0, 0),
-                                Size = UDim2.new(0, 200, 0, 170),
+                                Position = UDim2.new(0.5, -100, 0.5, -100), -- Центрирование с учетом нового размера
+                                Size = UDim2.new(0, 200, 0, 200), -- Увеличено с 170 до 200
                                 Visible = false,
-                                ZIndex = 200,
-                            }, ColorButton)
+                                ZIndex = 200
+                            })
 
+                            -- Палитра цветов
                             local ColorPicker = library:create("ImageButton", {
                                 Name = "ColorPicker",
                                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
@@ -934,7 +935,8 @@ end
                                 Image = "rbxassetid://4155801252",
                                 ImageColor3 = Color3.fromRGB(255, 0, 4),
                                 ZIndex = 200,
-                            }, ColorFrame)
+                                Parent = ColorFrame
+                            })
 
                             local ColorPick = library:create("Frame", {
                                 Name = "ColorPick",
@@ -955,26 +957,30 @@ end
                                 Text = "",
                             }, ColorFrame)
 
+                            -- Градиент для выбора оттенка
                             local UIGradient = library:create("UIGradient", {
+                                Color = ColorSequence.new({
+                                    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
+                                    ColorSequenceKeypoint.new(0.167, Color3.fromRGB(255, 255, 0)),
+                                    ColorSequenceKeypoint.new(0.333, Color3.fromRGB(0, 255, 0)),
+                                    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 255)),
+                                    ColorSequenceKeypoint.new(0.667, Color3.fromRGB(0, 0, 255)),
+                                    ColorSequenceKeypoint.new(0.833, Color3.fromRGB(255, 0, 255)),
+                                    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0))
+                                }),
                                 Rotation = 90,
-                                Color = ColorSequence.new {
-                                    ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 0, 0)),
-                                    ColorSequenceKeypoint.new(0.17, Color3.fromRGB(255, 0, 255)),
-                                    ColorSequenceKeypoint.new(0.33, Color3.fromRGB(0, 0, 255)),
-                                    ColorSequenceKeypoint.new(0.50, Color3.fromRGB(0, 255, 255)),
-                                    ColorSequenceKeypoint.new(0.67, Color3.fromRGB(0, 255, 0)),
-                                    ColorSequenceKeypoint.new(0.83, Color3.fromRGB(255, 255, 0)),
-                                    ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 0, 0))
-                                }
-                            }, HuePicker)
-
-                            local HuePick = library:create("ImageButton", {
+                                Parent = HuePicker
+                            })
+                            
+                            -- Индикатор выбранного оттенка
+                            local HuePick = library:create("Frame", {
                                 Name = "HuePick",
                                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                                 BorderColor3 = Color3.fromRGB(0, 0, 0),
                                 Size = UDim2.new(1, 0, 0, 1),
                                 ZIndex = 200,
-                            }, HuePicker)
+                                Parent = HuePicker
+                            })
 
                             local in_color = false
                             local in_color2 = false
@@ -1018,8 +1024,8 @@ end
                                     Name = "TransparencyPicker",
                                     BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                                     BorderColor3 = Color3.fromRGB(0, 0, 0),
-                                    Position = UDim2.new(0, 10, 0, 170),
-                                    Size = UDim2.new(0, 180, 0, 20),
+                                    Position = UDim2.new(0, 40, 0, 170),
+                                    Size = UDim2.new(0, 150, 0, 20),
                                     Image = "rbxassetid://3887014957",
                                     ScaleType = Enum.ScaleType.Tile,
                                     TileSize = UDim2.new(0, 10, 0, 10),
@@ -2217,7 +2223,7 @@ end
                         local ColorText = library:create("TextLabel", {
                             Name = "ColorText",
                             BackgroundTransparency = 1,
-                            Size = UDim2.new(0.6, 0, 0, 15),
+                            Size = UDim2.new(0.6, 0, 1, 0),
                             Position = UDim2.new(0, 0, 0, 0),
                             Font = Enum.Font.Ubuntu,
                             Text = name,
@@ -2230,7 +2236,7 @@ end
                         local ColorContainer = library:create("Frame", {
                             Name = "ColorContainer",
                             BackgroundTransparency = 1,
-                            Size = UDim2.new(0.4, -5, 0, 20),
+                            Size = UDim2.new(0.4, -5, 1, 0),
                             Position = UDim2.new(0.6, 0, 0, 0),
                         }, Border)
                         
@@ -2240,13 +2246,12 @@ end
                             BackgroundColor3 = Color3.fromRGB(20, 20, 20),
                             BorderColor3 = Color3.fromRGB(60, 60, 60),
                             Size = UDim2.new(0, 15, 0, 15),
-                            Position = UDim2.new(1, -15, 0, 0),
+                            Position = UDim2.new(1, -15, 0.5, -7.5),
                             Font = Enum.Font.Ubuntu,
                             Text = "+",
                             TextColor3 = Color3.fromRGB(255, 255, 255),
                             TextSize = 14,
-                            Visible = max_colors > 1,
-                            AnchorPoint = Vector2.new(0, 0),
+                            Visible = max_colors > 1 and value.Count < max_colors,
                         }, ColorContainer)
                         
                         -- Контейнер для цветовых кнопок
@@ -2263,14 +2268,18 @@ end
                         
                         -- Создаем функцию для выбора цвета
                         local function createColorPicker(index)
-                            -- Создаем кнопку выбора цвета с новыми размерами и позицией
-                            local buttonWidth = (1 / max_colors) * 0.85 -- Уменьшаем ширину для отступов
+                            -- Расчет размера и позиции кнопки
+                            local buttonWidth = 0.2 -- фиксированная ширина кнопки (20% от контейнера)
+                            local spacing = 0.05 -- отступ между кнопками (5% от контейнера)
+                            local startPos = 0.1 -- начальная позиция (10% от контейнера)
+                            
+                            -- Создаем кнопку выбора цвета
                             local ColorButton = library:create("TextButton", {
                                 Name = "ColorButton" .. index,
                                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                                 BorderColor3 = Color3.fromRGB(0, 0, 0),
                                 Size = UDim2.new(buttonWidth, 0, 0, 15),
-                                Position = UDim2.new((index-1) * (1/max_colors), (index-1)*2, 0, 0),
+                                Position = UDim2.new(startPos + (index-1) * (buttonWidth + spacing), 0, 0.5, -7.5),
                                 Text = "",
                                 AutoButtonColor = false,
                                 Visible = index <= value.Count
@@ -2331,16 +2340,16 @@ end
                                 end)
                             end
                             
-                            -- Фрейм с цветовой палитрой
+                            -- Фрейм с цветовой палитрой (будет перемещен в центр экрана при клике)
                             local ColorFrame = library:create("Frame", {
-                                Name = "ColorFrame",
+                                Name = "ColorFrame" .. index,
                                 BackgroundColor3 = Color3.fromRGB(10, 10, 10),
                                 BorderColor3 = Color3.fromRGB(0, 0, 0),
-                                Position = UDim2.new(1, 5, 0, 0),
-                                Size = UDim2.new(0, 200, 0, 170),
+                                Position = UDim2.new(0.5, -100, 0.5, -100), -- Центрирование с учетом нового размера
+                                Size = UDim2.new(0, 200, 0, 200), -- Увеличено с 170 до 200
                                 Visible = false,
-                                ZIndex = 200,
-                            }, ColorButton)
+                                ZIndex = 200
+                            })
                             
                             -- Палитра цветов
                             local ColorPicker = library:create("ImageButton", {
@@ -2353,7 +2362,8 @@ end
                                 Image = "rbxassetid://4155801252",
                                 ImageColor3 = Color3.fromRGB(255, 0, 4),
                                 ZIndex = 200,
-                            }, ColorFrame)
+                                Parent = ColorFrame
+                            })
                             
                             -- Индикатор выбранного цвета на палитре
                             local ColorPick = library:create("Frame", {
@@ -2362,7 +2372,8 @@ end
                                 BorderColor3 = Color3.fromRGB(0, 0, 0),
                                 Size = UDim2.new(0, 1, 0, 1),
                                 ZIndex = 200,
-                            }, ColorPicker)
+                                Parent = ColorPicker
+                            })
                             
                             -- Выбор оттенка
                             local HuePicker = library:create("TextButton", {
@@ -2374,7 +2385,8 @@ end
                                 ZIndex = 200,
                                 AutoButtonColor = false,
                                 Text = "",
-                            }, ColorFrame)
+                                Parent = ColorFrame
+                            })
                             
                             -- Градиент для выбора оттенка
                             local UIGradient = library:create("UIGradient", {
@@ -2404,21 +2416,20 @@ end
                                 Name = "TransparencyPicker",
                                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                                 BorderColor3 = Color3.fromRGB(0, 0, 0),
-                                Position = UDim2.new(0, 10, 0, 165),
-                                Size = UDim2.new(0, 180, 0, 15),
+                                Position = UDim2.new(0, 40, 0, 165), -- Изменено с 10 на 165 для размещения внизу
+                                Size = UDim2.new(0, 150, 0, 20),
                                 ZIndex = 200,
                                 AutoButtonColor = false,
                                 Text = "",
-                            }, ColorFrame)
+                                Parent = ColorFrame
+                            })
                             
-                            -- Градиент для прозрачности
+                            -- Градиент для выбора прозрачности
                             local TransparencyGradient = library:create("UIGradient", {
-                                Rotation = 0,
-                                Color = ColorSequence.new {
-                                    ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 255, 255)),
-                                    ColorSequenceKeypoint.new(1.00, Color3.fromRGB(0, 0, 0))
-                                }
-                            }, TransparencyPicker)
+                                Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(0, 0, 0)),
+                                Transparency = NumberSequence.new(0, 1),
+                                Parent = TransparencyPicker
+                            })
                             
                             -- Индикатор выбранной прозрачности
                             local TransparencyPick = library:create("Frame", {
@@ -2427,7 +2438,8 @@ end
                                 BorderColor3 = Color3.fromRGB(0, 0, 0),
                                 Size = UDim2.new(0, 1, 1, 0),
                                 ZIndex = 200,
-                            }, TransparencyPicker)
+                                Parent = TransparencyPicker
+                            })
                             
                             -- Объект для работы с цветом
                             local color_data = {h = 0, s = 0, v = 0}
@@ -2444,6 +2456,18 @@ end
                                 end
                                 
                                 ColorFrame.Visible = not ColorFrame.Visible
+                                
+                                -- Позиционируем панель в центре экрана
+                                if ColorFrame.Visible then
+                                    -- Получаем размеры экрана
+                                    local screenSize = game:GetService("Workspace").CurrentCamera.ViewportSize
+                                    
+                                    -- Перемещаем панель в центр экрана
+                                    ColorFrame.Position = UDim2.new(0, (screenSize.X - ColorFrame.AbsoluteSize.X) / 2, 
+                                                                     0, (screenSize.Y - ColorFrame.AbsoluteSize.Y) / 2)
+                                    ColorFrame.Parent = menu.GetDropdownContainer()
+                                end
+                                
                                 -- Включаем/выключаем подложку
                                 menu.ToggleDropdownShadow(ColorFrame.Visible)
                             end)
