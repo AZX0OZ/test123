@@ -1244,6 +1244,13 @@ end
                             
                             -- Добавляем проверку с задержкой
                             menu.CheckDropdownVisibility(DropdownScroll)
+                            
+                            -- Позиционируем выпадающее меню под кнопкой
+                            if dropdown_open then
+                                local buttonPos = DropdownButton.AbsolutePosition
+                                local buttonSize = DropdownButton.AbsoluteSize
+                                DropdownScroll.Position = UDim2.new(0, buttonPos.X, 0, buttonPos.Y + buttonSize.Y)
+                            end
 
                             if not dropdown_open then
                                 library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
@@ -1479,6 +1486,16 @@ end
 
                             -- Включаем/выключаем подложку
                             menu.ToggleDropdownShadow(dropdown_open)
+                            
+                            -- Добавляем проверку с задержкой
+                            menu.CheckDropdownVisibility(DropdownScroll)
+                            
+                            -- Позиционируем выпадающее меню под кнопкой
+                            if dropdown_open then
+                                local buttonPos = DropdownButton.AbsolutePosition
+                                local buttonSize = DropdownButton.AbsoluteSize
+                                DropdownScroll.Position = UDim2.new(0, buttonPos.X, 0, buttonPos.Y + buttonSize.Y)
+                            end
 
                             if not dropdown_open then
                                 library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
