@@ -858,53 +858,40 @@ end
                             return keybind
                         end
                         function element:add_color(color_default, has_transparency, color_callback)
+                            if has_extra then return end
+                            has_extra = true
+
                             local color = {}
-                            
-                            -- Инициализируем счетчик цветов если его нет
-                            self.color_count = self.color_count or 0
-                            self.color_count = self.color_count + 1
-                            
-                            -- Создаем уникальный флаг для этого цвета
-                            local extra_flag = "$"..flag.."_color_"..self.color_count
-                            
-                            -- Сохраняем значение цвета
-                            local extra_value = {
-                                Color = color_default and color_default.Color or Color3.fromRGB(255, 255, 255),
-                                Transparency = 0
-                            }
-                            
-                            menu.values[tab.tab_num][section_name][sector_name][extra_flag] = extra_value
-                            
-                            -- Вычисляем смещение для кнопки
-                            local offset = (self.color_count - 1) * 40
-                            
-                            -- Создаем кнопку цвета
+
+                            local extra_flag = "$"..flag
+
+                            local extra_value = {Color}
+                            color_callback = color_callback or function() end
+
                             local ColorButton = library:create("TextButton", {
                                 Name = "ColorButton",
                                 AnchorPoint = Vector2.new(1, 0.5),
-                                BackgroundColor3 = extra_value.Color,
+                                BackgroundColor3 = Color3.fromRGB(255, 28, 28),
                                 BorderColor3 = Color3.fromRGB(0, 0, 0),
-                                Position = UDim2.new(0, 265 - offset, 0.5, 0),
+                                Position = UDim2.new(0, 265, 0.5, 0),
                                 Size = UDim2.new(0, 35, 0, 11),
                                 AutoButtonColor = false,
                                 Font = Enum.Font.Ubuntu,
                                 Text = "",
                                 TextXAlignment = Enum.TextXAlignment.Right,
-                                ZIndex = 50,
-                            }, self.main_holder or self)
+                            }, ToggleButton)
 
-                            -- Создаем фрейм для колор пикера
                             local ColorFrame = library:create("Frame", {
                                 Name = "ColorFrame",
+                                Parent = ColorButton,
                                 BackgroundColor3 = Color3.fromRGB(10, 10, 10),
                                 BorderColor3 = Color3.fromRGB(0, 0, 0),
                                 Position = UDim2.new(1, 5, 0, 0),
-                                Size = UDim2.new(0, 200, 0, has_transparency and 200 or 170),
+                                Size = UDim2.new(0, 200, 0, 170),
                                 Visible = false,
-                                ZIndex = 100,
+                                ZIndex = 200,
                             }, ColorButton)
 
-                            -- Создаем цветовую палитру
                             local ColorPicker = library:create("ImageButton", {
                                 Name = "ColorPicker",
                                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
@@ -914,34 +901,31 @@ end
                                 AutoButtonColor = false,
                                 Image = "rbxassetid://4155801252",
                                 ImageColor3 = Color3.fromRGB(255, 0, 4),
-                                ZIndex = 100,
+                                ZIndex = 200,
                             }, ColorFrame)
 
-                            -- Добавляем индикатор выбора цвета
                             local ColorPick = library:create("Frame", {
                                 Name = "ColorPick",
                                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                                 BorderColor3 = Color3.fromRGB(0, 0, 0),
                                 Size = UDim2.new(0, 1, 0, 1),
-                                ZIndex = 100,
+                                ZIndex = 200,
                             }, ColorPicker)
 
-                            -- Создаем слайдер оттенка
                             local HuePicker = library:create("TextButton", {
                                 Name = "HuePicker",
                                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                                 BorderColor3 = Color3.fromRGB(0, 0, 0),
                                 Position = UDim2.new(0, 10, 0, 10),
                                 Size = UDim2.new(0, 20, 0, 150),
-                                ZIndex = 100,
+                                ZIndex = 200,
                                 AutoButtonColor = false,
                                 Text = "",
                             }, ColorFrame)
 
-                            -- Добавляем градиент для слайдера оттенка
                             local UIGradient = library:create("UIGradient", {
                                 Rotation = 90,
-                                Color = ColorSequence.new{
+                                Color = ColorSequence.new {
                                     ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 0, 0)),
                                     ColorSequenceKeypoint.new(0.17, Color3.fromRGB(255, 0, 255)),
                                     ColorSequenceKeypoint.new(0.33, Color3.fromRGB(0, 0, 255)),
@@ -952,36 +936,69 @@ end
                                 }
                             }, HuePicker)
 
-                            -- Добавляем индикатор для слайдера оттенка
-                            local HuePick = library:create("Frame", {
+                            local HuePick = library:create("ImageButton", {
                                 Name = "HuePick",
                                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                                 BorderColor3 = Color3.fromRGB(0, 0, 0),
                                 Size = UDim2.new(1, 0, 0, 1),
-                                ZIndex = 100,
+                                ZIndex = 200,
                             }, HuePicker)
 
-                            -- Если нужна прозрачность, добавляем слайдер прозрачности
-                            local TransparencyPicker, TransparencyColor, TransparencyPick
+                            local in_color = false
+                            local in_color2 = false
+                            ColorButton.MouseButton1Down:Connect(function()
+                                ColorFrame.Visible = not ColorFrame.Visible
+                                
+                                -- Включаем/выключаем подложку
+                                menu.ToggleDropdownShadow(ColorFrame.Visible)
+                            end)
+                            ColorFrame.MouseEnter:Connect(function()
+                                in_color = true
+                                library:tween(ColorFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BorderColor3 = Color3.fromRGB(84, 101, 255)})
+                            end)
+                            ColorFrame.MouseLeave:Connect(function()
+                                in_color = false
+                                library:tween(ColorFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BorderColor3 = Color3.fromRGB(0, 0, 0)})
+                            end)
+                            ColorButton.MouseEnter:Connect(function()
+                                in_color2 = true
+                            end)
+                            ColorButton.MouseLeave:Connect(function()
+                                in_color2 = false
+                            end)
+                            uis.InputBegan:Connect(function(input)
+                                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.MouseButton2 then
+                                    if ColorFrame.Visible == true and not in_color and not in_color2 then
+                                        ColorFrame.Visible = false
+                                        
+                                        -- Выключаем подложку
+                                        menu.ToggleDropdownShadow(false)
+                                    end
+                                end
+                            end)
+
+                            local TransparencyColor
+                            local TransparencyPick
                             if has_transparency then
-                                TransparencyPicker = library:create("ImageButton", {
+                                ColorFrame.Size = UDim2.new(0, 200, 0, 200)
+
+                                local TransparencyPicker = library:create("ImageButton", {
                                     Name = "TransparencyPicker",
                                     BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                                     BorderColor3 = Color3.fromRGB(0, 0, 0),
                                     Position = UDim2.new(0, 10, 0, 170),
                                     Size = UDim2.new(0, 180, 0, 20),
-                                    AutoButtonColor = false,
                                     Image = "rbxassetid://3887014957",
                                     ScaleType = Enum.ScaleType.Tile,
                                     TileSize = UDim2.new(0, 10, 0, 10),
-                                    ZIndex = 100,
+                                    ZIndex = 200,
                                 }, ColorFrame)
 
                                 TransparencyColor = library:create("ImageLabel", {
                                     BackgroundTransparency = 1,
                                     Size = UDim2.new(1, 0, 1, 0),
                                     Image = "rbxassetid://3887017050",
-                                    ZIndex = 100,
+                                    ZIndex = 200,
                                 }, TransparencyPicker)
 
                                 TransparencyPick = library:create("Frame", {
@@ -989,153 +1006,131 @@ end
                                     BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                                     BorderColor3 = Color3.fromRGB(0, 0, 0),
                                     Size = UDim2.new(0, 1, 1, 0),
-                                    ZIndex = 100,
+                                    ZIndex = 200,
                                 }, TransparencyPicker)
-                            end
 
-                            -- Добавляем обработку событий
-                            local color_data = {h = 0, s = 1, v = 1}
-                            
-                            -- Функция обновления цвета
-                            function color:update_color(no_callback)
-                                ColorPicker.ImageColor3 = Color3.fromHSV(color_data.h, 1, 1)
-                                ColorButton.BackgroundColor3 = Color3.fromHSV(color_data.h, color_data.s, color_data.v)
-                                
-                                if TransparencyColor then
-                                    TransparencyColor.ImageColor3 = Color3.fromHSV(color_data.h, 1, 1)
-                                end
-                                
-                                extra_value.Color = Color3.fromHSV(color_data.h, color_data.s, color_data.v)
-                                
-                                if not no_callback then
+                                extra_value.Transparency = 0
+
+                                function color.update_transp()
+                                    local x = math.clamp(mouse.X - TransparencyPicker.AbsolutePosition.X, 0, 180)
+                                    TransparencyPick.Position = UDim2.new(0, x, 0, 0)
+                                    local transparency = x/180
+                                    extra_value.Transparency = transparency
+
+                                    print(transparency)
+
                                     color_callback(extra_value)
+                                    menu.values[tab.tab_num][section_name][sector_name][extra_flag] = extra_value
                                 end
-                                
-                                menu.values[tab.tab_num][section_name][sector_name][extra_flag] = extra_value
-                            end
-
-                            -- Обработка кликов на цветовой палитре
-                            ColorPicker.MouseButton1Down:Connect(function()
-                                local function update()
-                                    local ColorX = (math.clamp(mouse.X - ColorPicker.AbsolutePosition.X, 0, ColorPicker.AbsoluteSize.X) / ColorPicker.AbsoluteSize.X)
-                                    local ColorY = (math.clamp(mouse.Y - ColorPicker.AbsolutePosition.Y, 0, ColorPicker.AbsoluteSize.Y) / ColorPicker.AbsoluteSize.Y)
-                                    
-                                    ColorPick.Position = UDim2.new(ColorX, 0, ColorY, 0)
-                                    
-                                    color_data.s = 1 - ColorX
-                                    color_data.v = 1 - ColorY
-                                    
-                                    color:update_color()
-                                end
-                                
-                                update()
-                                
-                                local move_connection
-                                local release_connection
-                                
-                                move_connection = mouse.Move:Connect(update)
-                                release_connection = uis.InputEnded:Connect(function(input)
-                                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                                        move_connection:Disconnect()
-                                        release_connection:Disconnect()
-                                    end
-                                end)
-                            end)
-
-                            -- Обработка кликов на слайдере оттенка
-                            HuePicker.MouseButton1Down:Connect(function()
-                                local function update()
-                                    local HueY = (math.clamp(mouse.Y - HuePicker.AbsolutePosition.Y, 0, HuePicker.AbsoluteSize.Y) / HuePicker.AbsoluteSize.Y)
-                                    
-                                    HuePick.Position = UDim2.new(0, 0, HueY, 0)
-                                    
-                                    color_data.h = 1 - HueY
-                                    
-                                    color:update_color()
-                                end
-                                
-                                update()
-                                
-                                local move_connection
-                                local release_connection
-                                
-                                move_connection = mouse.Move:Connect(update)
-                                release_connection = uis.InputEnded:Connect(function(input)
-                                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                                        move_connection:Disconnect()
-                                        release_connection:Disconnect()
-                                    end
-                                end)
-                            end)
-
-                            -- Обработка кликов на слайдере прозрачности
-                            if TransparencyPicker then
                                 TransparencyPicker.MouseButton1Down:Connect(function()
-                                    local function update()
-                                        local TransparencyX = (math.clamp(mouse.X - TransparencyPicker.AbsolutePosition.X, 0, TransparencyPicker.AbsoluteSize.X) / TransparencyPicker.AbsoluteSize.X)
-                                        
-                                        TransparencyPick.Position = UDim2.new(TransparencyX, 0, 0, 0)
-                                        
-                                        extra_value.Transparency = TransparencyX
-                                        
-                                        color_callback(extra_value)
-                                        menu.values[tab.tab_num][section_name][sector_name][extra_flag] = extra_value
-                                    end
-                                    
-                                    update()
-                                    
-                                    local move_connection
-                                    local release_connection
-                                    
-                                    move_connection = mouse.Move:Connect(update)
-                                    release_connection = uis.InputEnded:Connect(function(input)
-                                        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                                            move_connection:Disconnect()
-                                            release_connection:Disconnect()
+                                    color.update_transp()
+                                    local moveconnection = mouse.Move:Connect(function()
+                                        color.update_transp()
+                                    end)
+                                    releaseconnection = uis.InputEnded:Connect(function(Mouse)
+                                        if Mouse.UserInputType == Enum.UserInputType.MouseButton1 then
+                                            color.update_transp()
+                                            moveconnection:Disconnect()
+                                            releaseconnection:Disconnect()
                                         end
                                     end)
                                 end)
                             end
 
-                            -- Обработка открытия/закрытия колор пикера
-                            local colorpicker_open = false
-                            ColorButton.MouseButton1Down:Connect(function()
-                                colorpicker_open = not colorpicker_open
-                                ColorFrame.Visible = colorpicker_open
-                                
-                                if colorpicker_open then
-                                    for _,picker in pairs(menu.colorpicker_connections) do
-                                        if picker ~= ColorFrame then
-                                            picker.Visible = false
-                                        end
+                            color.h = (math.clamp(HuePick.AbsolutePosition.Y-HuePicker.AbsolutePosition.Y, 0, HuePicker.AbsoluteSize.Y)/HuePicker.AbsoluteSize.Y)
+                            color.s = 1-(math.clamp(ColorPick.AbsolutePosition.X-ColorPick.AbsolutePosition.X, 0, ColorPick.AbsoluteSize.X)/ColorPick.AbsoluteSize.X)
+                            color.v = 1-(math.clamp(ColorPick.AbsolutePosition.Y-ColorPick.AbsolutePosition.Y, 0, ColorPick.AbsoluteSize.Y)/ColorPick.AbsoluteSize.Y)
+
+                            extra_value.Color = Color3.fromHSV(color.h, color.s, color.v)
+                            menu.values[tab.tab_num][section_name][sector_name][extra_flag] = extra_value
+
+                            function color.update_color()
+                                local ColorX = (math.clamp(mouse.X - ColorPicker.AbsolutePosition.X, 0, ColorPicker.AbsoluteSize.X)/ColorPicker.AbsoluteSize.X)
+                                local ColorY = (math.clamp(mouse.Y - ColorPicker.AbsolutePosition.Y, 0, ColorPicker.AbsoluteSize.Y)/ColorPicker.AbsoluteSize.Y)
+                                ColorPick.Position = UDim2.new(ColorX, 0, ColorY, 0)
+
+                                color.s = 1 - ColorX
+                                color.v = 1 - ColorY
+
+                                ColorButton.BackgroundColor3 = Color3.fromHSV(color.h, color.s, color.v)
+                                extra_value.Color = Color3.fromHSV(color.h, color.s, color.v)
+                                color_callback(extra_value)
+                                menu.values[tab.tab_num][section_name][sector_name][extra_flag] = extra_value
+                            end
+                            ColorPicker.MouseButton1Down:Connect(function()
+                                color.update_color()
+                                local moveconnection = mouse.Move:Connect(function()
+                                    color.update_color()
+                                end)
+                                releaseconnection = uis.InputEnded:Connect(function(Mouse)
+                                    if Mouse.UserInputType == Enum.UserInputType.MouseButton1 then
+                                        color.update_color()
+                                        moveconnection:Disconnect()
+                                        releaseconnection:Disconnect()
                                     end
-                                end
+                                end)
                             end)
 
-                            -- Добавляем в список активных колор пикеров
-                            menu.colorpicker_connections = menu.colorpicker_connections or {}
-                            table.insert(menu.colorpicker_connections, ColorFrame)
-
-                            -- Устанавливаем начальное значение
-                            function color:set_value(new_value, no_callback)
-                                if typeof(new_value) == "table" then
-                                    extra_value = new_value
-                                    local h, s, v = extra_value.Color:ToHSV()
-                                    color_data.h = h
-                                    color_data.s = s
-                                    color_data.v = v
-                                    
-                                    if TransparencyPick then
-                                        TransparencyPick.Position = UDim2.new(extra_value.Transparency, 0, 0, 0)
+                            function color.update_hue()
+                                local y = math.clamp(mouse.Y - HuePicker.AbsolutePosition.Y, 0, 148)
+                                HuePick.Position = UDim2.new(0, 0, 0, y)
+                                local hue = y/148
+                                color.h = 1-hue
+                                ColorPicker.ImageColor3 = Color3.fromHSV(color.h, 1, 1)
+                                ColorButton.BackgroundColor3 = Color3.fromHSV(color.h, color.s, color.v)
+                                if TransparencyColor then
+                                    TransparencyColor.ImageColor3 = Color3.fromHSV(color.h, 1, 1)
+                                end
+                                extra_value.Color = Color3.fromHSV(color.h, color.s, color.v)
+                                color_callback(extra_value)
+                                menu.values[tab.tab_num][section_name][sector_name][extra_flag] = extra_value
+                            end
+                            HuePicker.MouseButton1Down:Connect(function()
+                                color.update_hue()
+                                local moveconnection = mouse.Move:Connect(function()
+                                    color.update_hue()
+                                end)
+                                releaseconnection = uis.InputEnded:Connect(function(Mouse)
+                                    if Mouse.UserInputType == Enum.UserInputType.MouseButton1 then
+                                        color.update_hue()
+                                        moveconnection:Disconnect()
+                                        releaseconnection:Disconnect()
                                     end
-                                    
-                                    color:update_color(no_callback)
+                                end)
+                            end)
+
+                            function color:set_value(new_value, cb)
+                                extra_value = new_value and new_value or extra_value
+                                menu.values[tab.tab_num][section_name][sector_name][extra_flag] = extra_value
+
+                                local duplicate = Color3.new(extra_value.Color.R, extra_value.Color.G, extra_value.Color.B)
+                                color.h, color.s, color.v = duplicate:ToHSV()
+                                color.h = math.clamp(color.h, 0, 1)
+                                color.s = math.clamp(color.s, 0, 1)
+                                color.v = math.clamp(color.v, 0, 1)
+        
+                                ColorPick.Position = UDim2.new(1 - color.s, 0, 1 - color.v, 0)
+                                ColorPicker.ImageColor3 = Color3.fromHSV(color.h, 1, 1)
+                                ColorButton.BackgroundColor3 = Color3.fromHSV(color.h, color.s, color.v)
+                                HuePick.Position = UDim2.new(0, 0, 1 - color.h, -1)
+
+                                if TransparencyColor then
+                                    TransparencyColor.ImageColor3 = Color3.fromHSV(color.h, 1, 1)
+
+                                    TransparencyPick.Position = UDim2.new(extra_value.Transparency, -1, 0, 0)
+                                end
+
+                                if cb == nil or not cb then
+                                    color_callback(extra_value)
                                 end
                             end
+                            color:set_value(color_default and color_default, true)
 
-                            color:set_value(color_default or {Color = Color3.fromRGB(255, 255, 255), Transparency = 0}, true)
+                            menu.on_load_cfg:Connect(function()
+                                color:set_value(menu.values[tab.tab_num][section_name][sector_name][extra_flag])
+                            end)
 
-                            return self
+                            return color
                         end
                     elseif type == "Dropdown" then
                         Border.Size = Border.Size + UDim2.new(0, 0, 0, 45)
@@ -1344,6 +1339,283 @@ end
                                 TextSize = 14,
                                 TextXAlignment = Enum.TextXAlignment.Left,
                                 ZIndex = 100,
+                            }, Button)
+
+                            local Decoration = library:create("Frame", {
+                                Name = "Decoration",
+                                BackgroundColor3 = Color3.fromRGB(84, 101, 255),
+                                BorderSizePixel = 0,
+                                Size = UDim2.new(0, 1, 1, 0),
+                                Visible = false,
+                                ZIndex = 100,
+                            }, Button)
+
+                            Button.MouseEnter:Connect(function()
+                                library:tween(ButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)})
+                                Decoration.Visible = true
+                            end)
+                            Button.MouseLeave:Connect(function()
+                                library:tween(ButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
+                                Decoration.Visible = false
+                            end)
+                            Button.MouseButton1Down:Connect(function()
+                                DropdownScroll.Visible = false
+                                DropdownButtonText.Text = v
+                                value.Dropdown = v
+
+                                library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
+                                library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
+
+                                do_callback()
+                            end)
+
+                            if dropdown_is_first then
+                                dropdown_is_first = false
+                            end
+                        end
+                        element:set_value(value, true)
+                    elseif type == "Combo" then
+                        Border.Size = Border.Size + UDim2.new(0, 0, 0, 45)
+
+                        value = {Combo = default and default.Combo or {}}
+
+                        local Dropdown = library:create("TextLabel", {
+                            Name = "Dropdown",
+                            BackgroundTransparency = 1,
+                            Size = UDim2.new(1, 0, 0, 45),
+                            Text = "",
+                        }, Container)
+
+                        function element:set_visible(bool)
+                            if bool then
+                                if Dropdown.Visible then return end
+                                Border.Size = Border.Size + UDim2.new(0, 0, 0, 45)
+                                Dropdown.Visible = true
+                            else
+                                if not Dropdown.Visible then return end
+                                Border.Size = Border.Size + UDim2.new(0, 0, 0, -45)
+                                Dropdown.Visible = false
+                            end
+                        end
+
+                        local DropdownButton = library:create("TextButton", {
+                            Name = "DropdownButton",
+                            BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+                            BorderColor3 = Color3.fromRGB(0, 0, 0),
+                            Position = UDim2.new(0, 9, 0, 20),
+                            Size = UDim2.new(0, 260, 0, 20),
+                            AutoButtonColor = false,
+                            Text = "",
+                        }, Dropdown)
+
+                        local DropdownButtonText = library:create("TextLabel", {
+                            Name = "DropdownButtonText",
+                            BackgroundTransparency = 1,
+                            Position = UDim2.new(0, 6, 0, 0),
+                            Size = UDim2.new(0, 250, 1, 0),
+                            Font = Enum.Font.Ubuntu,
+                            Text = value.Dropdown,
+                            TextColor3 = Color3.fromRGB(150, 150, 150),
+                            TextSize = 14,
+                            TextXAlignment = Enum.TextXAlignment.Left,
+                        }, DropdownButton)
+
+                        local ImageLabel = library:create("ImageLabel", {
+                            BackgroundTransparency = 1,
+                            Position = UDim2.new(0, 245, 0, 8),
+                            Size = UDim2.new(0, 6, 0, 4),
+                            Image = "rbxassetid://6724771531",
+                        }, DropdownButton)
+
+                        local DropdownText = library:create("TextLabel", {
+                            Name = "DropdownText",
+                            BackgroundTransparency = 1,
+                            Position = UDim2.new(0, 9, 0, 6),
+                            Size = UDim2.new(0, 200, 0, 9),
+                            Font = Enum.Font.Ubuntu,
+                            Text = text,
+                            TextColor3 = Color3.fromRGB(150, 150, 150),
+                            TextSize = 14,
+                            TextXAlignment = Enum.TextXAlignment.Left,
+                        }, Dropdown)
+
+                        local DropdownScroll = library:create("ScrollingFrame", {
+                            Name = "DropdownScroll",
+                            Active = true,
+                            BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+                            BorderColor3 = Color3.fromRGB(0, 0, 0),
+                            Position = UDim2.new(0, 9, 0, 41),
+                            Size = UDim2.new(0, 260, 0, 20),
+                            CanvasSize = UDim2.new(0, 0, 0, 0),
+                            ScrollBarThickness = 2,
+                            TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
+                            BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
+                            Visible = false,
+                            ZIndex = 100,
+                            BackgroundTransparency = 0,
+                        }, menu.GetDropdownContainer())
+
+                        local UIListLayout = library:create("UIListLayout", {
+                            HorizontalAlignment = Enum.HorizontalAlignment.Center,
+                            SortOrder = Enum.SortOrder.LayoutOrder,
+                        }, DropdownScroll)
+
+                        local options_num = #data.options
+                        if options_num >= 4 then
+                            DropdownScroll.Size = UDim2.new(0, 260, 0, 80)
+                            for i = 1, options_num do
+                                DropdownScroll.CanvasSize = DropdownScroll.CanvasSize + UDim2.new(0, 0, 0, 20)
+                            end
+                        else
+                            DropdownScroll.Size = UDim2.new(0, 260, 0, 20 * options_num)
+                        end
+
+                        local in_drop = false
+                        local in_drop2 = false
+                        local dropdown_open = false
+                        DropdownButton.MouseButton1Down:Connect(function()
+                            DropdownScroll.Visible = not DropdownScroll.Visible
+                            dropdown_open = DropdownScroll.Visible
+
+                            -- Включаем/выключаем подложку
+                            menu.ToggleDropdownShadow(dropdown_open)
+
+                            if not dropdown_open then
+                                library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
+                                library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
+                                
+                                -- Скрываем маску, когда меню закрывается
+                                local mask = DropdownScroll:FindFirstChild("BackgroundMask")
+                                if mask then
+                                    mask.Visible = false
+                                end
+                            else
+                                library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)})
+                                library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)})
+                                
+                                -- Создаем маску для фона, если еще не существует
+                                local mask = DropdownScroll:FindFirstChild("BackgroundMask")
+                                if not mask then
+                                    mask = library:create("Frame", {
+                                        Name = "BackgroundMask",
+                                        BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+                                        BorderSizePixel = 1,
+                                        BorderColor3 = Color3.fromRGB(0, 0, 0),
+                                        Size = UDim2.new(1, 0, 1, 0),
+                                        ZIndex = 90,
+                                        ClipsDescendants = false,
+                                    }, DropdownScroll)
+                                end
+                                mask.Visible = true
+                            end
+                        end)
+                        Dropdown.MouseEnter:Connect(function()
+                            in_drop = true
+                        end)
+                        Dropdown.MouseLeave:Connect(function()
+                            in_drop = false
+                        end)
+                        DropdownScroll.MouseEnter:Connect(function()
+                            in_drop2 = true
+                        end)
+                        DropdownScroll.MouseLeave:Connect(function()
+                            in_drop2 = false
+                        end)
+                        uis.InputBegan:Connect(function(input)
+                            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.MouseButton2 then
+                                if DropdownScroll.Visible == true and not in_drop and not in_drop2 then
+                                    DropdownScroll.Visible = false
+                                    DropdownScroll.CanvasPosition = Vector2.new(0,0)
+                                    
+                                    -- Выключаем подложку
+                                    menu.ToggleDropdownShadow(false)
+
+                                    library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
+                                    library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
+                                end
+                            end
+                        end)
+
+                        function element.update_text()
+							local options = {}
+							for i,v in next, data.options do
+								if table.find(value.Combo, v) then
+									table.insert(options, v)
+								end
+							end
+							local new_text = ""
+							if #options == 0 then
+								new_text = "..."
+							elseif #options == 1 then
+								new_text = options[1]
+                            else
+                                for i,v in next, options do
+                                    if i == 1 then
+                                        new_text = v
+                                    else
+                                        if i > 3 then
+                                            if i < 5 then
+                                                new_text = new_text..",  ..."
+                                            end
+                                        else
+                                            new_text = new_text..",  "..v
+                                        end
+                                    end
+                                end
+							end
+	
+							DropdownButtonText.Text = new_text
+						end
+
+                        function element:set_value(new_value, cb)
+                            value = new_value and new_value or value
+                            menu.values[tab.tab_num][section_name][sector_name][flag] = value
+                            
+                            element.update_text()
+
+                            for _,DropButton in next, DropdownScroll:GetChildren() do
+                                if not DropButton:IsA("TextButton") then continue end
+                                local ButtonText = DropButton.ButtonText
+                                if table.find(value.Combo, ButtonText.Text) then
+                                    DropButton.Decoration.Visible = true
+                                    ButtonText.TextColor3 = Color3.fromRGB(255, 255, 255)
+                                else
+                                    DropButton.Decoration.Visible = false
+                                    ButtonText.TextColor3 = Color3.fromRGB(150, 150, 150)
+                                end
+                            end
+
+                            if cb == nil or not cb then
+                                do_callback()
+                            end
+                        end
+
+                        local dropdown_is_first = true
+                        for _,v in next, data.options do
+                            local Button = library:create("TextButton", {
+                                Name = v,
+                                BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+                                BorderColor3 = Color3.fromRGB(0, 0, 0),
+                                BorderSizePixel = 0,
+                                Position = UDim2.new(0, 0, 0, 20),
+                                Size = UDim2.new(1, 0, 0, 20),
+                                AutoButtonColor = false,
+                                Font = Enum.Font.SourceSans,
+                                Text = "",
+                                ZIndex = 6,
+                            }, DropdownScroll)
+
+                            local ButtonText = library:create("TextLabel", {
+                                Name = "ButtonText",
+                                BackgroundTransparency = 1,
+                                Position = UDim2.new(0, 8, 0, 0),
+                                Size = UDim2.new(0, 245, 1, 0),
+                                Font = Enum.Font.Ubuntu,
+                                Text = v,
+                                TextColor3 = Color3.fromRGB(150, 150, 150),
+                                TextSize = 14,
+                                TextXAlignment = Enum.TextXAlignment.Left,
+                                ZIndex = 6,
                             }, Button)
 
                             local Decoration = library:create("Frame", {
@@ -1892,170 +2164,471 @@ end
                     elseif type == "ColorPicker" then
                         Border.Size = Border.Size + UDim2.new(0, 0, 0, 30)
                         
-                        value = {Color = default and default.color or Color3.fromRGB(255, 255, 255)}
+                        -- Значение по умолчанию
+                        value = {
+                            Colors = default and default.Colors or {
+                                {Color = Color3.fromRGB(255, 255, 255), Transparency = 0}, 
+                                nil, 
+                                nil
+                            },
+                            Count = default and default.Count or 1
+                        }
                         
-                        local ColorFrame = library:create("Frame", {
-                            Name = "ColorFrame",
-                            BackgroundTransparency = 1,
-                            Size = UDim2.new(1, 0, 0, 30),
-                        }, Container)
+                        -- Максимальное количество цветов (от 1 до 3)
+                        local max_colors = data.max_colors or 3
+                        max_colors = math.min(3, math.max(1, max_colors))
                         
+                        -- Текст элемента
                         local ColorText = library:create("TextLabel", {
                             Name = "ColorText",
                             BackgroundTransparency = 1,
-                            Position = UDim2.new(0, 9, 0, 0),
-                            Size = UDim2.new(0, 200, 1, 0),
+                            Size = UDim2.new(1, 0, 0, 15),
+                            Position = UDim2.new(0, 0, 0, 0),
                             Font = Enum.Font.Ubuntu,
-                            Text = text,
-                            TextColor3 = Color3.fromRGB(150, 150, 150),
+                            Text = name,
+                            TextColor3 = Color3.fromRGB(255, 255, 255),
                             TextSize = 14,
                             TextXAlignment = Enum.TextXAlignment.Left,
-                        }, ColorFrame)
+                        }, Border)
                         
-                        local ColorButton = library:create("TextButton", {
-                            Name = "ColorButton",
-                            AnchorPoint = Vector2.new(1, 0.5),
-                            BackgroundColor3 = value.Color,
-                            BorderColor3 = Color3.fromRGB(0, 0, 0),
-                            Position = UDim2.new(1, -10, 0.5, 0),
-                            Size = UDim2.new(0, 35, 0, 15),
-                            AutoButtonColor = false,
-                            Text = "",
-                        }, ColorFrame)
+                        -- Контейнер для цветов
+                        local ColorContainer = library:create("Frame", {
+                            Name = "ColorContainer",
+                            BackgroundTransparency = 1,
+                            Size = UDim2.new(1, -10, 0, 20),
+                            Position = UDim2.new(0, 5, 0, 15),
+                        }, Border)
                         
-                        local ColorPicker = library:create("Frame", {
-                            Name = "ColorPicker",
-                            BackgroundColor3 = Color3.fromRGB(25, 25, 25),
-                            BorderColor3 = Color3.fromRGB(0, 0, 0),
-                            Position = UDim2.new(1, 5, 0, 0),
-                            Size = UDim2.new(0, 200, 0, 200),
-                            Visible = false,
-                            ZIndex = 100,
-                        }, ColorButton)
+                        -- Кнопка добавления цвета
+                        local AddButton = library:create("TextButton", {
+                            Name = "AddButton",
+                            BackgroundColor3 = Color3.fromRGB(20, 20, 20),
+                            BorderColor3 = Color3.fromRGB(60, 60, 60),
+                            Size = UDim2.new(0, 20, 0, 15),
+                            Position = UDim2.new(1, -20, 0, 0),
+                            Font = Enum.Font.Ubuntu,
+                            Text = "+",
+                            TextColor3 = Color3.fromRGB(255, 255, 255),
+                            TextSize = 14,
+                            Visible = max_colors > 1,
+                            AnchorPoint = Vector2.new(1, 0),
+                        }, ColorContainer)
                         
-                        local Palette = library:create("ImageButton", {
-                            BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                            BorderColor3 = Color3.fromRGB(0, 0, 0),
-                            Position = UDim2.new(0, 10, 0, 10),
-                            Size = UDim2.new(0, 180, 0, 180),
-                            AutoButtonColor = false,
-                            Image = "rbxassetid://4155801252",
-                            ImageColor3 = Color3.fromRGB(255, 0, 0),
-                            ZIndex = 100,
-                        }, ColorPicker)
+                        -- Контейнер для цветовых кнопок
+                        local ColorButtons = library:create("Frame", {
+                            Name = "ColorButtons",
+                            BackgroundTransparency = 1,
+                            Size = UDim2.new(1, -25, 1, 0),
+                            Position = UDim2.new(0, 0, 0, 0),
+                        }, ColorContainer)
                         
-                        local Cursor = library:create("Frame", {
-                            BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                            BorderColor3 = Color3.fromRGB(0, 0, 0),
-                            Size = UDim2.new(0, 2, 0, 2),
-                            ZIndex = 101,
-                        }, Palette)
+                        -- Массив кнопок выбора цвета
+                        local colorPickerButtons = {}
+                        local colorFrames = {}
                         
-                        local HuePicker = library:create("TextButton", {
-                            BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                            BorderColor3 = Color3.fromRGB(0, 0, 0),
-                            Position = UDim2.new(0, 10, 0, 10),
-                            Size = UDim2.new(0, 180, 0, 10),
-                            AutoButtonColor = false,
-                            Text = "",
-                            ZIndex = 100,
-                        }, ColorPicker)
-                        
-                        local HueGradient = library:create("UIGradient", {
-                            Color = ColorSequence.new({
-                                ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
-                                ColorSequenceKeypoint.new(0.167, Color3.fromRGB(255, 255, 0)),
-                                ColorSequenceKeypoint.new(0.333, Color3.fromRGB(0, 255, 0)),
-                                ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 255)),
-                                ColorSequenceKeypoint.new(0.667, Color3.fromRGB(0, 0, 255)),
-                                ColorSequenceKeypoint.new(0.833, Color3.fromRGB(255, 0, 255)),
-                                ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0))
-                            }),
-                        }, HuePicker)
-                        
-                        local HueCursor = library:create("Frame", {
-                            BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                            BorderColor3 = Color3.fromRGB(0, 0, 0),
-                            Size = UDim2.new(0, 2, 1, 0),
-                            ZIndex = 101,
-                        }, HuePicker)
-                        
-                        local color_hsv = {h = 0, s = 1, v = 1}
-                        
-                        local function update_color()
-                            value.Color = Color3.fromHSV(color_hsv.h, color_hsv.s, color_hsv.v)
-                            ColorButton.BackgroundColor3 = value.Color
-                            Palette.ImageColor3 = Color3.fromHSV(color_hsv.h, 1, 1)
-                            do_callback()
+                        -- Создаем функцию для выбора цвета
+                        local function createColorPicker(index)
+                            -- Создаем кнопку выбора цвета
+                            local ColorButton = library:create("TextButton", {
+                                Name = "ColorButton" .. index,
+                                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                                BorderColor3 = Color3.fromRGB(0, 0, 0),
+                                Size = UDim2.new(1/max_colors, -5, 1, 0),
+                                Position = UDim2.new((index-1)/max_colors, (index-1)*5, 0, 0),
+                                Text = "",
+                                AutoButtonColor = false,
+                                Visible = index <= value.Count
+                            }, ColorButtons)
+                            
+                            -- Кнопка удаления цвета (для всех кроме первого)
+                            local RemoveButton = nil
+                            if index > 1 then
+                                RemoveButton = library:create("TextButton", {
+                                    Name = "RemoveButton",
+                                    BackgroundColor3 = Color3.fromRGB(80, 0, 0),
+                                    BorderColor3 = Color3.fromRGB(60, 60, 60),
+                                    Size = UDim2.new(0, 10, 0, 10),
+                                    Position = UDim2.new(1, -5, 0, -5),
+                                    Font = Enum.Font.Ubuntu,
+                                    Text = "x",
+                                    TextColor3 = Color3.fromRGB(255, 255, 255),
+                                    TextSize = 10,
+                                    ZIndex = 200,
+                                }, ColorButton)
+                                
+                                RemoveButton.MouseButton1Click:Connect(function()
+                                    -- Удаляем цвет
+                                    for i = index, value.Count - 1 do
+                                        value.Colors[i] = value.Colors[i + 1]
+                                    end
+                                    value.Colors[value.Count] = nil
+                                    value.Count = value.Count - 1
+                                    
+                                    -- Обновляем отображение
+                                    for i = 1, max_colors do
+                                        colorPickerButtons[i].Visible = i <= value.Count
+                                    end
+                                    
+                                    -- Показываем кнопку добавления если нужно
+                                    AddButton.Visible = value.Count < max_colors
+                                    
+                                    -- Вызываем callback
+                                    menu.values[tab.tab_num][section_name][sector_name][flag] = value
+                                    callback(value)
+                                end)
+                            end
+                            
+                            -- Фрейм с цветовой палитрой
+                            local ColorFrame = library:create("Frame", {
+                                Name = "ColorFrame",
+                                BackgroundColor3 = Color3.fromRGB(10, 10, 10),
+                                BorderColor3 = Color3.fromRGB(0, 0, 0),
+                                Position = UDim2.new(1, 5, 0, 0),
+                                Size = UDim2.new(0, 200, 0, 170),
+                                Visible = false,
+                                ZIndex = 200,
+                            }, ColorButton)
+                            
+                            -- Палитра цветов
+                            local ColorPicker = library:create("ImageButton", {
+                                Name = "ColorPicker",
+                                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                                BorderColor3 = Color3.fromRGB(0, 0, 0),
+                                Position = UDim2.new(0, 40, 0, 10),
+                                Size = UDim2.new(0, 150, 0, 150),
+                                AutoButtonColor = false,
+                                Image = "rbxassetid://4155801252",
+                                ImageColor3 = Color3.fromRGB(255, 0, 4),
+                                ZIndex = 200,
+                            }, ColorFrame)
+                            
+                            -- Индикатор выбранного цвета на палитре
+                            local ColorPick = library:create("Frame", {
+                                Name = "ColorPick",
+                                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                                BorderColor3 = Color3.fromRGB(0, 0, 0),
+                                Size = UDim2.new(0, 1, 0, 1),
+                                ZIndex = 200,
+                            }, ColorPicker)
+                            
+                            -- Выбор оттенка
+                            local HuePicker = library:create("TextButton", {
+                                Name = "HuePicker",
+                                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                                BorderColor3 = Color3.fromRGB(0, 0, 0),
+                                Position = UDim2.new(0, 10, 0, 10),
+                                Size = UDim2.new(0, 20, 0, 150),
+                                ZIndex = 200,
+                                AutoButtonColor = false,
+                                Text = "",
+                            }, ColorFrame)
+                            
+                            -- Градиент для выбора оттенка
+                            local UIGradient = library:create("UIGradient", {
+                                Rotation = 90,
+                                Color = ColorSequence.new {
+                                    ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 0, 0)),
+                                    ColorSequenceKeypoint.new(0.17, Color3.fromRGB(255, 0, 255)),
+                                    ColorSequenceKeypoint.new(0.33, Color3.fromRGB(0, 0, 255)),
+                                    ColorSequenceKeypoint.new(0.50, Color3.fromRGB(0, 255, 255)),
+                                    ColorSequenceKeypoint.new(0.67, Color3.fromRGB(0, 255, 0)),
+                                    ColorSequenceKeypoint.new(0.83, Color3.fromRGB(255, 255, 0)),
+                                    ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 0, 0))
+                                }
+                            }, HuePicker)
+                            
+                            -- Индикатор выбранного оттенка
+                            local HuePick = library:create("Frame", {
+                                Name = "HuePick",
+                                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                                BorderColor3 = Color3.fromRGB(0, 0, 0),
+                                Size = UDim2.new(1, 0, 0, 1),
+                                ZIndex = 200,
+                            }, HuePicker)
+                            
+                            -- Выбор прозрачности
+                            local TransparencyPicker = library:create("TextButton", {
+                                Name = "TransparencyPicker",
+                                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                                BorderColor3 = Color3.fromRGB(0, 0, 0),
+                                Position = UDim2.new(0, 10, 0, 165),
+                                Size = UDim2.new(0, 180, 0, 15),
+                                ZIndex = 200,
+                                AutoButtonColor = false,
+                                Text = "",
+                            }, ColorFrame)
+                            
+                            -- Градиент для прозрачности
+                            local TransparencyGradient = library:create("UIGradient", {
+                                Rotation = 0,
+                                Color = ColorSequence.new {
+                                    ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 255, 255)),
+                                    ColorSequenceKeypoint.new(1.00, Color3.fromRGB(0, 0, 0))
+                                }
+                            }, TransparencyPicker)
+                            
+                            -- Индикатор выбранной прозрачности
+                            local TransparencyPick = library:create("Frame", {
+                                Name = "TransparencyPick",
+                                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                                BorderColor3 = Color3.fromRGB(0, 0, 0),
+                                Size = UDim2.new(0, 1, 1, 0),
+                                ZIndex = 200,
+                            }, TransparencyPicker)
+                            
+                            -- Объект для работы с цветом
+                            local color_data = {h = 0, s = 0, v = 0}
+                            
+                            -- Обработчики событий
+                            local in_color = false
+                            local in_color2 = false
+                            
+                            ColorButton.MouseButton1Click:Connect(function()
+                                for i = 1, max_colors do
+                                    if i ~= index and colorFrames[i] then
+                                        colorFrames[i].Visible = false
+                                    end
+                                end
+                                
+                                ColorFrame.Visible = not ColorFrame.Visible
+                                -- Включаем/выключаем подложку
+                                menu.ToggleDropdownShadow(ColorFrame.Visible)
+                            end)
+                            
+                            -- Скрытие панели при клике в другом месте
+                            ColorFrame.MouseEnter:Connect(function()
+                                in_color = true
+                            end)
+                            
+                            ColorFrame.MouseLeave:Connect(function()
+                                in_color = false
+                            end)
+                            
+                            ColorButton.MouseEnter:Connect(function()
+                                in_color2 = true
+                            end)
+                            
+                            ColorButton.MouseLeave:Connect(function()
+                                in_color2 = false
+                            end)
+                            
+                            UserInputService.InputBegan:Connect(function(input)
+                                if input.UserInputType == Enum.UserInputType.MouseButton1 and ColorFrame.Visible and not in_color and not in_color2 then
+                                    ColorFrame.Visible = false
+                                    menu.ToggleDropdownShadow(false)
+                                end
+                            end)
+                            
+                            -- Выбор цвета на палитре
+                            local function update()
+                                if value.Colors[index] then
+                                    value.Colors[index].Color = Color3.fromHSV(color_data.h, color_data.s, color_data.v)
+                                    value.Colors[index].Transparency = color_data.t or 0
+                                    
+                                    -- Обновляем цвет кнопки
+                                    ColorButton.BackgroundColor3 = value.Colors[index].Color
+                                    
+                                    -- Обновляем значение
+                                    menu.values[tab.tab_num][section_name][sector_name][flag] = value
+                                    callback(value)
+                                end
+                            end
+                            
+                            -- Обработка выбора цвета на палитре
+                            ColorPicker.MouseButton1Down:Connect(function()
+                                local moveconnection = nil
+                                local releaseconnection = nil
+                                
+                                moveconnection = UserInputService.InputChanged:Connect(function(input)
+                                    if input.UserInputType == Enum.UserInputType.MouseMovement then
+                                        local ColorX = math.clamp(input.Position.X - ColorPicker.AbsolutePosition.X, 0, ColorPicker.AbsoluteSize.X) / ColorPicker.AbsoluteSize.X
+                                        local ColorY = math.clamp(input.Position.Y - ColorPicker.AbsolutePosition.Y, 0, ColorPicker.AbsoluteSize.Y) / ColorPicker.AbsoluteSize.Y
+                                        
+                                        ColorPick.Position = UDim2.new(ColorX, 0, ColorY, 0)
+                                        
+                                        color_data.s = ColorX
+                                        color_data.v = 1 - ColorY
+                                        
+                                        update()
+                                    end
+                                end)
+                                
+                                releaseconnection = UserInputService.InputEnded:Connect(function(input)
+                                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                                        moveconnection:Disconnect()
+                                        releaseconnection:Disconnect()
+                                    end
+                                end)
+                                
+                                local ColorX = math.clamp(Mouse.X - ColorPicker.AbsolutePosition.X, 0, ColorPicker.AbsoluteSize.X) / ColorPicker.AbsoluteSize.X
+                                local ColorY = math.clamp(Mouse.Y - ColorPicker.AbsolutePosition.Y, 0, ColorPicker.AbsoluteSize.Y) / ColorPicker.AbsoluteSize.Y
+                                
+                                ColorPick.Position = UDim2.new(ColorX, 0, ColorY, 0)
+                                
+                                color_data.s = ColorX
+                                color_data.v = 1 - ColorY
+                                
+                                update()
+                            end)
+                            
+                            -- Обработка выбора оттенка
+                            HuePicker.MouseButton1Down:Connect(function()
+                                local moveconnection = nil
+                                local releaseconnection = nil
+                                
+                                moveconnection = UserInputService.InputChanged:Connect(function(input)
+                                    if input.UserInputType == Enum.UserInputType.MouseMovement then
+                                        local HueY = math.clamp(input.Position.Y - HuePicker.AbsolutePosition.Y, 0, HuePicker.AbsoluteSize.Y) / HuePicker.AbsoluteSize.Y
+                                        
+                                        HuePick.Position = UDim2.new(0, 0, HueY, 0)
+                                        
+                                        color_data.h = 1 - HueY
+                                        
+                                        ColorPicker.ImageColor3 = Color3.fromHSV(color_data.h, 1, 1)
+                                        
+                                        update()
+                                    end
+                                end)
+                                
+                                releaseconnection = UserInputService.InputEnded:Connect(function(input)
+                                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                                        moveconnection:Disconnect()
+                                        releaseconnection:Disconnect()
+                                    end
+                                end)
+                                
+                                local HueY = math.clamp(Mouse.Y - HuePicker.AbsolutePosition.Y, 0, HuePicker.AbsoluteSize.Y) / HuePicker.AbsoluteSize.Y
+                                
+                                HuePick.Position = UDim2.new(0, 0, HueY, 0)
+                                
+                                color_data.h = 1 - HueY
+                                
+                                ColorPicker.ImageColor3 = Color3.fromHSV(color_data.h, 1, 1)
+                                
+                                update()
+                            end)
+                            
+                            -- Обработка выбора прозрачности
+                            TransparencyPicker.MouseButton1Down:Connect(function()
+                                local moveconnection = nil
+                                local releaseconnection = nil
+                                
+                                moveconnection = UserInputService.InputChanged:Connect(function(input)
+                                    if input.UserInputType == Enum.UserInputType.MouseMovement then
+                                        local TransparencyX = math.clamp(input.Position.X - TransparencyPicker.AbsolutePosition.X, 0, TransparencyPicker.AbsoluteSize.X) / TransparencyPicker.AbsoluteSize.X
+                                        
+                                        TransparencyPick.Position = UDim2.new(TransparencyX, 0, 0, 0)
+                                        
+                                        color_data.t = TransparencyX
+                                        
+                                        update()
+                                    end
+                                end)
+                                
+                                releaseconnection = UserInputService.InputEnded:Connect(function(input)
+                                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                                        moveconnection:Disconnect()
+                                        releaseconnection:Disconnect()
+                                    end
+                                end)
+                                
+                                local TransparencyX = math.clamp(Mouse.X - TransparencyPicker.AbsolutePosition.X, 0, TransparencyPicker.AbsoluteSize.X) / TransparencyPicker.AbsoluteSize.X
+                                
+                                TransparencyPick.Position = UDim2.new(TransparencyX, 0, 0, 0)
+                                
+                                color_data.t = TransparencyX
+                                
+                                update()
+                            end)
+                            
+                            -- Функция для установки значения цвета
+                            local function set_color_value(color_value)
+                                if color_value then
+                                    local duplicate = Color3.new(color_value.Color.R, color_value.Color.G, color_value.Color.B)
+                                    color_data.h, color_data.s, color_data.v = duplicate:ToHSV()
+                                    color_data.h = math.clamp(color_data.h, 0, 1)
+                                    color_data.s = math.clamp(color_data.s, 0, 1)
+                                    color_data.v = math.clamp(color_data.v, 0, 1)
+                                    color_data.t = color_value.Transparency or 0
+                                    
+                                    ColorPick.Position = UDim2.new(color_data.s, 0, 1 - color_data.v, 0)
+                                    ColorPicker.ImageColor3 = Color3.fromHSV(color_data.h, 1, 1)
+                                    ColorButton.BackgroundColor3 = Color3.fromHSV(color_data.h, color_data.s, color_data.v)
+                                    HuePick.Position = UDim2.new(0, 0, 1 - color_data.h, 0)
+                                    TransparencyPick.Position = UDim2.new(color_data.t, 0, 0, 0)
+                                end
+                            end
+                            
+                            -- Устанавливаем начальное значение
+                            if value.Colors[index] then
+                                set_color_value(value.Colors[index])
+                            end
+                            
+                            return {
+                                Button = ColorButton,
+                                Frame = ColorFrame,
+                                SetValue = set_color_value
+                            }
                         end
                         
-                        ColorButton.MouseButton1Click:Connect(function()
-                            ColorPicker.Visible = not ColorPicker.Visible
-                        end)
+                        -- Создаем все цветовые пикеры
+                        for i = 1, max_colors do
+                            colorPickerButtons[i] = createColorPicker(i)
+                            colorFrames[i] = colorPickerButtons[i].Frame
+                        end
                         
-                        Palette.MouseButton1Down:Connect(function()
-                            local function update()
-                                local pos = Vector2.new(mouse.X - Palette.AbsolutePosition.X, mouse.Y - Palette.AbsolutePosition.Y)
-                                pos = Vector2.new(math.clamp(pos.X, 0, Palette.AbsoluteSize.X), math.clamp(pos.Y, 0, Palette.AbsoluteSize.Y))
-                                Cursor.Position = UDim2.new(0, pos.X - 1, 0, pos.Y - 1)
+                        -- Обработчик кнопки добавления цвета
+                        AddButton.MouseButton1Click:Connect(function()
+                            if value.Count < max_colors then
+                                value.Count = value.Count + 1
+                                value.Colors[value.Count] = {Color = Color3.fromRGB(255, 255, 255), Transparency = 0}
                                 
-                                color_hsv.s = pos.X / Palette.AbsoluteSize.X
-                                color_hsv.v = 1 - (pos.Y / Palette.AbsoluteSize.Y)
-                                update_color()
-                            end
-                            
-                            update()
-                            
-                            local move_conn = mouse.Move:Connect(update)
-                            local release_conn
-                            release_conn = uis.InputEnded:Connect(function(input)
-                                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                                    move_conn:Disconnect()
-                                    release_conn:Disconnect()
-                                end
-                            end)
-                        end)
-                        
-                        HuePicker.MouseButton1Down:Connect(function()
-                            local function update()
-                                local pos = Vector2.new(mouse.X - HuePicker.AbsolutePosition.X, 0)
-                                pos = Vector2.new(math.clamp(pos.X, 0, HuePicker.AbsoluteSize.X), 0)
-                                HueCursor.Position = UDim2.new(0, pos.X - 1, 0, 0)
+                                -- Показываем соответствующий цветовой пикер
+                                colorPickerButtons[value.Count].Button.Visible = true
                                 
-                                color_hsv.h = pos.X / HuePicker.AbsoluteSize.X
-                                update_color()
-                            end
-                            
-                            update()
-                            
-                            local move_conn = mouse.Move:Connect(update)
-                            local release_conn
-                            release_conn = uis.InputEnded:Connect(function(input)
-                                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                                    move_conn:Disconnect()
-                                    release_conn:Disconnect()
+                                -- Скрываем кнопку добавления если достигли максимума
+                                if value.Count >= max_colors then
+                                    AddButton.Visible = false
                                 end
-                            end)
+                                
+                                -- Вызываем callback
+                                menu.values[tab.tab_num][section_name][sector_name][flag] = value
+                                callback(value)
+                            end
                         end)
                         
+                        -- Методы элемента
                         function element:set_value(new_value, cb)
                             value = new_value or value
-                            local h, s, v = value.Color:ToHSV()
-                            color_hsv.h = h
-                            color_hsv.s = s
-                            color_hsv.v = v
+                            menu.values[tab.tab_num][section_name][sector_name][flag] = value
                             
-                            ColorButton.BackgroundColor3 = value.Color
-                            Palette.ImageColor3 = Color3.fromHSV(h, 1, 1)
-                            Cursor.Position = UDim2.new(s, -1, 1 - v, -1)
-                            HueCursor.Position = UDim2.new(h, -1, 0, 0)
+                            -- Обновляем отображение
+                            for i = 1, max_colors do
+                                colorPickerButtons[i].Button.Visible = i <= value.Count
+                                if i <= value.Count and value.Colors[i] then
+                                    colorPickerButtons[i].SetValue(value.Colors[i])
+                                end
+                            end
+                            
+                            -- Обновляем видимость кнопки добавления
+                            AddButton.Visible = value.Count < max_colors
                             
                             if cb == nil or not cb then
-                                do_callback()
+                                callback(value)
                             end
                         end
                         
-                        element:set_value(value, true)
+                        function element:get_value()
+                            return value
+                        end
+                        
+                        function element:set_visible(bool)
+                            Border.Visible = bool
+                        end
+                        
+                        menu.on_load_cfg:Connect(function()
+                            element:set_value(menu.values[tab.tab_num][section_name][sector_name][flag])
+                        end)
                     end
 
                     menu.on_load_cfg:Connect(function()
