@@ -171,6 +171,15 @@ function library.new(library_title, cfg_location)
         DropdownShadow.Visible = visible
     end
     
+    -- Функция для проверки видимости выпадающих меню с задержкой
+    function menu.CheckDropdownVisibility(dropdown)
+        task.delay(0.1, function()
+            if not dropdown.Visible then
+                menu.ToggleDropdownShadow(false)
+            end
+        end)
+    end
+    
     -- Функция для получения контейнера выпадающих списков
     function menu.GetDropdownContainer()
         return DropdownContainer
@@ -1233,12 +1242,8 @@ end
                             -- Включаем/выключаем подложку
                             menu.ToggleDropdownShadow(dropdown_open)
                             
-                            -- Обновление позиции DropdownScroll
-                            if dropdown_open then
-                                local buttonPos = DropdownButton.AbsolutePosition
-                                local buttonSize = DropdownButton.AbsoluteSize
-                                DropdownScroll.Position = UDim2.new(0, buttonPos.X, 0, buttonPos.Y + buttonSize.Y)
-                            end
+                            -- Добавляем проверку с задержкой
+                            menu.CheckDropdownVisibility(DropdownScroll)
 
                             if not dropdown_open then
                                 library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
@@ -1287,8 +1292,8 @@ end
                                     DropdownScroll.Visible = false
                                     DropdownScroll.CanvasPosition = Vector2.new(0,0)
                                     
-                                    -- Выключаем подложку
-                                    menu.ToggleDropdownShadow(false)
+                                    -- Добавляем проверку видимости с задержкой вместо прямого выключения подложки
+                                    menu.CheckDropdownVisibility(DropdownScroll)
 
                                     library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
                                     library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
@@ -1522,8 +1527,8 @@ end
                                     DropdownScroll.Visible = false
                                     DropdownScroll.CanvasPosition = Vector2.new(0,0)
                                     
-                                    -- Выключаем подложку
-                                    menu.ToggleDropdownShadow(false)
+                                    -- Добавляем проверку видимости с задержкой вместо прямого выключения подложки
+                                    menu.CheckDropdownVisibility(DropdownScroll)
 
                                     library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
                                     library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
@@ -1648,10 +1653,11 @@ end
 
                                 element.update_text()
                                 
-                                -- Выключаем подложку после выбора
-                                menu.ToggleDropdownShadow(false)
                                 -- Скрываем выпадающее меню
                                 DropdownScroll.Visible = false
+                                
+                                -- Добавляем проверку видимости с задержкой вместо прямого выключения подложки
+                                menu.CheckDropdownVisibility(DropdownScroll)
 
                                 do_callback()
                             end)
