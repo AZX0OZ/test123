@@ -2752,6 +2752,8 @@ end
 
                 -- Добавляем функцию для получения элемента по имени
                 function sector:get_element(name)
+                    if not elements then return nil end
+                    if not elements[name] then return nil end
                     return elements[name]
                 end
 
