@@ -5,6 +5,38 @@ function library:tween(...) TweenService:Create(...):Play() end
 
 local uis = game:GetService("UserInputService")
 
+-- Добавим глобальный массив для хранения всех открытых колорпикеров
+library.openColorPickers = {}
+
+-- Добавим глобальный обработчик для закрытия колорпикеров
+library.setupColorPickerHandling = function()
+    if not library.colorPickerInputConnection then
+        library.colorPickerInputConnection = uis.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                for _, data in pairs(library.openColorPickers) do
+                    if data.frame and data.frame.Visible and not data.inColor and not data.inColor2 then
+                        data.frame.Visible = false
+                        data.toggleShadow(false)
+                    end
+                end
+            end
+        end)
+    end
+end
+library.setupColorPickerHandling()
+
+-- Создаем глобальный обработчик для всех ColorPicker
+library.setupColorPickerEvents = function()
+    if not library.colorPickerInputConnection then
+        library.colorPickerInputConnection = uis.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                -- Обработка будет добавлена отдельно для каждого ColorPicker
+            end
+        end)
+    end
+end
+library.setupColorPickerEvents()
+
 function library:create(Object, Properties, Parent)
     local Obj = Instance.new(Object)
 
@@ -2412,10 +2444,19 @@ end
                                 in_color2 = false
                             end)
                             
-                            uis.InputBegan:Connect(function(input)
-                                if input.UserInputType == Enum.UserInputType.MouseButton1 and ColorFrame.Visible and not in_color and not in_color2 then
-                                    ColorFrame.Visible = false
-                                    menu.ToggleDropdownShadow(false)
+                            -- Закрытие при клике вне пикера будет обрабатываться через глобальный обработчик
+                            -- Используем безопасный pcall для всех операций с вводом
+                            pcall(function()
+                                if not library.globalInputHandler then
+                                    library.globalInputHandler = true
+                                    game:GetService("UserInputService").InputBegan:Connect(function(input)
+                                        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                                            if ColorFrame and ColorFrame.Visible and not in_color and not in_color2 then
+                                                ColorFrame.Visible = false
+                                                menu.ToggleDropdownShadow(false)
+                                            end
+                                        end
+                                    end)
                                 end
                             end)
                             
