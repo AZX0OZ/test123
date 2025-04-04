@@ -144,6 +144,38 @@ function library.new(library_title, cfg_location)
 		syn.protect_gui(ScreenGui)
 	end
 
+    -- Создаем подложку для выпадающих меню
+    local DropdownShadow = library:create("Frame", {
+        Name = "DropdownShadow",
+        BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+        BackgroundTransparency = 0.7,
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, 0, 0, 0),
+        Size = UDim2.new(1, 0, 1, 0),
+        Visible = false,
+        ZIndex = 90,
+    }, ScreenGui)
+    
+    -- Контейнер для всех выпадающих списков
+    local DropdownContainer = library:create("Frame", {
+        Name = "DropdownContainer",
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 0, 0, 0),
+        Size = UDim2.new(1, 0, 1, 0),
+        Visible = true,
+        ZIndex = 100,
+    }, ScreenGui)
+
+    -- Функция для показа/скрытия подложки
+    function menu.ToggleDropdownShadow(visible)
+        DropdownShadow.Visible = visible
+    end
+    
+    -- Функция для получения контейнера выпадающих списков
+    function menu.GetDropdownContainer()
+        return DropdownContainer
+    end
+
     local Cursor = library:create("ImageLabel", {
         Name = "Cursor",
         BackgroundTransparency = 1,
@@ -852,7 +884,7 @@ end
                                 Position = UDim2.new(1, 5, 0, 0),
                                 Size = UDim2.new(0, 200, 0, 170),
                                 Visible = false,
-                                ZIndex = 10,
+                                ZIndex = 200,
                             }, ColorButton)
 
                             local ColorPicker = library:create("ImageButton", {
@@ -864,7 +896,7 @@ end
                                 AutoButtonColor = false,
                                 Image = "rbxassetid://4155801252",
                                 ImageColor3 = Color3.fromRGB(255, 0, 4),
-                                ZIndex = 10,
+                                ZIndex = 200,
                             }, ColorFrame)
 
                             local ColorPick = library:create("Frame", {
@@ -872,7 +904,7 @@ end
                                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                                 BorderColor3 = Color3.fromRGB(0, 0, 0),
                                 Size = UDim2.new(0, 1, 0, 1),
-                                ZIndex = 10,
+                                ZIndex = 200,
                             }, ColorPicker)
 
                             local HuePicker = library:create("TextButton", {
@@ -881,7 +913,7 @@ end
                                 BorderColor3 = Color3.fromRGB(0, 0, 0),
                                 Position = UDim2.new(0, 10, 0, 10),
                                 Size = UDim2.new(0, 20, 0, 150),
-                                ZIndex = 10,
+                                ZIndex = 200,
                                 AutoButtonColor = false,
                                 Text = "",
                             }, ColorFrame)
@@ -904,13 +936,16 @@ end
                                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                                 BorderColor3 = Color3.fromRGB(0, 0, 0),
                                 Size = UDim2.new(1, 0, 0, 1),
-                                ZIndex = 10,
+                                ZIndex = 200,
                             }, HuePicker)
 
                             local in_color = false
                             local in_color2 = false
                             ColorButton.MouseButton1Down:Connect(function()
                                 ColorFrame.Visible = not ColorFrame.Visible
+                                
+                                -- Включаем/выключаем подложку
+                                menu.ToggleDropdownShadow(ColorFrame.Visible)
                             end)
                             ColorFrame.MouseEnter:Connect(function()
                                 in_color = true
@@ -930,6 +965,9 @@ end
                                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.MouseButton2 then
                                     if ColorFrame.Visible == true and not in_color and not in_color2 then
                                         ColorFrame.Visible = false
+                                        
+                                        -- Выключаем подложку
+                                        menu.ToggleDropdownShadow(false)
                                     end
                                 end
                             end)
@@ -948,14 +986,14 @@ end
                                     Image = "rbxassetid://3887014957",
                                     ScaleType = Enum.ScaleType.Tile,
                                     TileSize = UDim2.new(0, 10, 0, 10),
-                                    ZIndex = 10,
+                                    ZIndex = 200,
                                 }, ColorFrame)
 
                                 TransparencyColor = library:create("ImageLabel", {
                                     BackgroundTransparency = 1,
                                     Size = UDim2.new(1, 0, 1, 0),
                                     Image = "rbxassetid://3887017050",
-                                    ZIndex = 10,
+                                    ZIndex = 200,
                                 }, TransparencyPicker)
 
                                 TransparencyPick = library:create("Frame", {
@@ -963,7 +1001,7 @@ end
                                     BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                                     BorderColor3 = Color3.fromRGB(0, 0, 0),
                                     Size = UDim2.new(0, 1, 1, 0),
-                                    ZIndex = 10,
+                                    ZIndex = 200,
                                 }, TransparencyPicker)
 
                                 extra_value.Transparency = 0
@@ -1166,8 +1204,9 @@ end
                             TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
                             BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
                             Visible = false,
-                            ZIndex = 5,
-                        }, Dropdown)
+                            ZIndex = 100,
+                            BackgroundTransparency = 0,
+                        }, menu.GetDropdownContainer())
 
                         local UIListLayout = library:create("UIListLayout", {
                             HorizontalAlignment = Enum.HorizontalAlignment.Center,
@@ -1191,12 +1230,43 @@ end
                             DropdownScroll.Visible = not DropdownScroll.Visible
                             dropdown_open = DropdownScroll.Visible
 
+                            -- Включаем/выключаем подложку
+                            menu.ToggleDropdownShadow(dropdown_open)
+                            
+                            -- Обновление позиции DropdownScroll
+                            if dropdown_open then
+                                local buttonPos = DropdownButton.AbsolutePosition
+                                local buttonSize = DropdownButton.AbsoluteSize
+                                DropdownScroll.Position = UDim2.new(0, buttonPos.X, 0, buttonPos.Y + buttonSize.Y)
+                            end
+
                             if not dropdown_open then
                                 library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
                                 library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
+                                
+                                -- Скрываем маску, когда меню закрывается
+                                local mask = DropdownScroll:FindFirstChild("BackgroundMask")
+                                if mask then
+                                    mask.Visible = false
+                                end
                             else
                                 library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)})
                                 library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)})
+                                
+                                -- Создаем маску для фона, если еще не существует
+                                local mask = DropdownScroll:FindFirstChild("BackgroundMask")
+                                if not mask then
+                                    mask = library:create("Frame", {
+                                        Name = "BackgroundMask",
+                                        BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+                                        BorderSizePixel = 1,
+                                        BorderColor3 = Color3.fromRGB(0, 0, 0),
+                                        Size = UDim2.new(1, 0, 1, 0),
+                                        ZIndex = 90,
+                                        ClipsDescendants = false,
+                                    }, DropdownScroll)
+                                end
+                                mask.Visible = true
                             end
                         end)
                         Dropdown.MouseEnter:Connect(function()
@@ -1216,6 +1286,9 @@ end
                                 if DropdownScroll.Visible == true and not in_drop and not in_drop2 then
                                     DropdownScroll.Visible = false
                                     DropdownScroll.CanvasPosition = Vector2.new(0,0)
+                                    
+                                    -- Выключаем подложку
+                                    menu.ToggleDropdownShadow(false)
 
                                     library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
                                     library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
@@ -1246,7 +1319,8 @@ end
                                 AutoButtonColor = false,
                                 Font = Enum.Font.SourceSans,
                                 Text = "",
-                                ZIndex = 6,
+                                ZIndex = 100,
+                                BackgroundTransparency = 0,
                             }, DropdownScroll)
 
                             local ButtonText = library:create("TextLabel", {
@@ -1259,7 +1333,7 @@ end
                                 TextColor3 = Color3.fromRGB(150, 150, 150),
                                 TextSize = 14,
                                 TextXAlignment = Enum.TextXAlignment.Left,
-                                ZIndex = 6,
+                                ZIndex = 100,
                             }, Button)
 
                             local Decoration = library:create("Frame", {
@@ -1268,7 +1342,7 @@ end
                                 BorderSizePixel = 0,
                                 Size = UDim2.new(0, 1, 1, 0),
                                 Visible = false,
-                                ZIndex = 6,
+                                ZIndex = 100,
                             }, Button)
 
                             Button.MouseEnter:Connect(function()
@@ -1372,8 +1446,9 @@ end
                             TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
                             BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
                             Visible = false,
-                            ZIndex = 5,
-                        }, Dropdown)
+                            ZIndex = 100,
+                            BackgroundTransparency = 0,
+                        }, menu.GetDropdownContainer())
 
                         local UIListLayout = library:create("UIListLayout", {
                             HorizontalAlignment = Enum.HorizontalAlignment.Center,
@@ -1397,12 +1472,36 @@ end
                             DropdownScroll.Visible = not DropdownScroll.Visible
                             dropdown_open = DropdownScroll.Visible
 
+                            -- Включаем/выключаем подложку
+                            menu.ToggleDropdownShadow(dropdown_open)
+
                             if not dropdown_open then
                                 library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
                                 library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
+                                
+                                -- Скрываем маску, когда меню закрывается
+                                local mask = DropdownScroll:FindFirstChild("BackgroundMask")
+                                if mask then
+                                    mask.Visible = false
+                                end
                             else
                                 library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)})
                                 library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)})
+                                
+                                -- Создаем маску для фона, если еще не существует
+                                local mask = DropdownScroll:FindFirstChild("BackgroundMask")
+                                if not mask then
+                                    mask = library:create("Frame", {
+                                        Name = "BackgroundMask",
+                                        BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+                                        BorderSizePixel = 1,
+                                        BorderColor3 = Color3.fromRGB(0, 0, 0),
+                                        Size = UDim2.new(1, 0, 1, 0),
+                                        ZIndex = 90,
+                                        ClipsDescendants = false,
+                                    }, DropdownScroll)
+                                end
+                                mask.Visible = true
                             end
                         end)
                         Dropdown.MouseEnter:Connect(function()
@@ -1422,6 +1521,9 @@ end
                                 if DropdownScroll.Visible == true and not in_drop and not in_drop2 then
                                     DropdownScroll.Visible = false
                                     DropdownScroll.CanvasPosition = Vector2.new(0,0)
+                                    
+                                    -- Выключаем подложку
+                                    menu.ToggleDropdownShadow(false)
 
                                     library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
                                     library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
