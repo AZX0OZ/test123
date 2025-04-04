@@ -2194,23 +2194,36 @@ end
                         end
                         element:set_value(value, true)
                     elseif type == "ColorPicker" then
-                        Border.Size = Border.Size + UDim2.new(0, 0, 0, 30)
+                        local max_colors = extra.max_colors or 7
                         
-                        -- Значение по умолчанию
-                        value = {
-                            Colors = default and default.Colors or {
-                                {Color = Color3.fromRGB(255, 255, 255), Transparency = 0}, 
-                                nil, 
-                                nil
+                        local value = {
+                            Colors = {
+                                {Color = Color3.fromRGB(255, 255, 255), Transparency = 0}
                             },
-                            Count = default and default.Count or 1
+                            Count = 1
                         }
+                                                
+                        if default then
+                            value = default
+                        end
                         
-                        -- Максимальное количество цветов (от 1 до 3)
-                        local max_colors = data.max_colors or 3
-                        max_colors = math.min(3, math.max(1, max_colors))
+                        if menu.values[tab.tab_num][section_name][sector_name][flag] then
+                            value = menu.values[tab.tab_num][section_name][sector_name][flag]
+                        end
                         
-                        -- Текст элемента
+                        menu.values[tab.tab_num][section_name][sector_name][flag] = value
+                        
+                        -- Создаем границу
+                        local Border = library:create("Frame", {
+                            Name = "Border",
+                            BackgroundColor3 = Color3.fromRGB(10, 10, 10),
+                            BorderColor3 = Color3.fromRGB(60, 60, 60),
+                            BorderSizePixel = 1,
+                            Size = UDim2.new(1, -10, 0, 50),
+                            Position = UDim2.new(0, 5, 0, 0),
+                        }, sector_content)
+                        
+                        -- Текст с названием
                         local ColorText = library:create("TextLabel", {
                             Name = "ColorText",
                             BackgroundTransparency = 1,
@@ -2273,25 +2286,7 @@ end
                                 Size = UDim2.new(1, -4, 1, -2),
                                 Position = UDim2.new(0, 2, 0, 1),
                                 Visible = true,
-                                ClipsDescendants = false
                             }, indicatorContainer)
-                            
-                            -- Убираем эффект блеска
-                            -- local shineEffect = library:create("Frame", {
-                            --     Name = "ShineEffect",
-                            --     BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                            --     BackgroundTransparency = 0.7,
-                            --     BorderSizePixel = 0,
-                            --     Size = UDim2.new(0.7, 0, 2, 0),
-                            --     Position = UDim2.new(-0.7, 0, -0.5, 0),
-                            --     Rotation = 45,
-                            --     Visible = true
-                            -- }, indicator)
-                            
-                            -- Закругляем углы - убираем для совместимости со стилем
-                            -- local uiCorner = library:create("UICorner", {
-                            --     CornerRadius = UDim.new(0, 3)
-                            -- }, indicator)
                             
                             colorIndicators[i] = {
                                 Container = indicatorContainer,
@@ -2313,344 +2308,150 @@ end
                         
                         -- Создаем функцию для выбора цвета
                         local function createColorPicker(index)
-                            -- Создаем кнопку выбора цвета
+                            -- Создаем контейнер для кнопки выбора цвета
                             local ColorButtonContainer = library:create("Frame", {
                                 Name = "ColorButtonContainer" .. index,
                                 BackgroundTransparency = 1,
                                 Size = UDim2.new(1/max_colors, -5, 1, 0),
-                                Position = UDim2.new((index-1)/max_colors, index > 1 and (index-1)*5 or 0, 0, 0),
+                                Position = UDim2.new((index-1)/max_colors, 0, 0, 0),
                                 Visible = index <= value.Count
                             }, ColorButtons)
                             
                             local ColorButton = library:create("TextButton", {
                                 Name = "ColorButton" .. index,
                                 BackgroundColor3 = value.Colors[index] and value.Colors[index].Color or Color3.fromRGB(255, 255, 255),
-                                BorderSizePixel = 0,
+                                BorderSizePixel = 1,
+                                BorderColor3 = Color3.fromRGB(60, 60, 60),
                                 Size = UDim2.new(1, -2, 1, -2),
                                 Position = UDim2.new(0, 1, 0, 1),
                                 Text = "",
-                                AutoButtonColor = false,
-                                ClipsDescendants = true,
+                                AutoButtonColor = false
                             }, ColorButtonContainer)
                             
-                            -- Вместо UICorner используем простую рамку
-                            ColorButton.BorderSizePixel = 1
-                            ColorButton.BorderColor3 = Color3.fromRGB(60, 60, 60)
-                            
-                            -- Убираем лишние эффекты
-                            -- local buttonCorner = library:create("UICorner", {
-                            --     CornerRadius = UDim.new(0, 4)
-                            -- }, ColorButton)
-                            
-                            -- Добавляем тень
-                            -- local buttonStroke = library:create("UIStroke", {
-                            --     Color = Color3.fromRGB(60, 60, 60),
-                            --     Thickness = 1,
-                            --     Transparency = 0
-                            -- }, ColorButton)
-                            
-                            -- Добавляем эффект блеска
-                            -- local shineEffect = library:create("Frame", {
-                            --     Name = "ShineEffect",
-                            --     BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                            --     BackgroundTransparency = 0.7,
-                            --     BorderSizePixel = 0,
-                            --     Size = UDim2.new(0.7, 0, 2, 0),
-                            --     Position = UDim2.new(-0.7, 0, -0.5, 0),
-                            --     Rotation = 45,
-                            --     Visible = true
-                            -- }, ColorButton)
-                            
-                            -- Кнопка удаления цвета (для всех кроме первого)
-                            local RemoveButton = nil
-                            if index > 1 then
-                                RemoveButton = library:create("TextButton", {
-                                    Name = "RemoveButton",
-                                    BackgroundColor3 = Color3.fromRGB(40, 0, 0),
-                                    BorderSizePixel = 0,
-                                    Size = UDim2.new(0, 10, 0, 10),
-                                    Position = UDim2.new(1, -5, 0, -5),
-                                    Font = Enum.Font.GothamSemibold,
-                                    Text = "×",
-                                    TextColor3 = Color3.fromRGB(255, 255, 255),
-                                    TextSize = 10,
-                                    ZIndex = 200,
-                                }, ColorButtonContainer)
-                                
-                                -- Закругляем углы кнопки удаления
-                                local removeCorner = library:create("UICorner", {
-                                    CornerRadius = UDim.new(1, 0)
-                                }, RemoveButton)
-                                
-                                -- Анимация при наведении
-                                RemoveButton.MouseEnter:Connect(function()
-                                    library:tween(RemoveButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(180, 0, 0)})
-                                end)
-                                
-                                RemoveButton.MouseLeave:Connect(function()
-                                    library:tween(RemoveButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(40, 0, 0)})
-                                end)
-                                
-                                RemoveButton.MouseButton1Click:Connect(function()
-                                    -- Удаляем цвет
-                                    for i = index, value.Count - 1 do
-                                        value.Colors[i] = value.Colors[i + 1]
-                                    end
-                                    value.Colors[value.Count] = nil
-                                    value.Count = value.Count - 1
-                                    
-                                    -- Обновляем отображение
-                                    for i = 1, max_colors do
-                                        if colorPickerButtons[i] then
-                                            colorPickerButtons[i].Container.Visible = i <= value.Count
-                                        end
-                                        
-                                        -- Обновляем индикаторы цветов
-                                        if i <= value.Count then
-                                            if colorIndicators[i] then
-                                                colorIndicators[i].Indicator.BackgroundColor3 = value.Colors[i].Color
-                                                colorIndicators[i].Container.Visible = true
-                                            end
-                                        else
-                                            if colorIndicators[i] then
-                                                colorIndicators[i].Container.Visible = false
-                                            end
-                                        end
-                                    end
-                                    
-                                    -- Показываем кнопку добавления если нужно
-                                    AddButton.Visible = value.Count < max_colors
-                                    
-                                    -- Вызываем callback
-                                    menu.values[tab.tab_num][section_name][sector_name][flag] = value
-                                    callback(value)
-                                end)
-                            end
-                            
-                            -- Фрейм с цветовой палитрой
+                            -- Фрейм для выбора цвета
                             local ColorFrame = library:create("Frame", {
                                 Name = "ColorFrame",
-                                BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+                                BackgroundColor3 = Color3.fromRGB(20, 20, 20),
                                 BorderColor3 = Color3.fromRGB(60, 60, 60),
+                                BorderSizePixel = 1,
                                 Position = UDim2.new(1, 5, 0, 0),
-                                Size = UDim2.new(0, 210, 0, 190),
+                                Size = UDim2.new(0, 200, 0, 200),
                                 Visible = false,
-                                ZIndex = 200,
+                                ZIndex = 200
                             }, ColorButtonContainer)
-                            
-                            -- Закругляем углы панели
-                            local frameCorner = library:create("UICorner", {
-                                CornerRadius = UDim.new(0, 5)
-                            }, ColorFrame)
-                            
-                            -- Тень для панели
-                            local frameShadow = library:create("Frame", {
-                                Name = "Shadow",
-                                BackgroundColor3 = Color3.fromRGB(0, 0, 0),
-                                BorderSizePixel = 0,
-                                Size = UDim2.new(1, 10, 1, 10),
-                                Position = UDim2.new(0, -5, 0, -5),
-                                ZIndex = 199,
-                                BackgroundTransparency = 0.6
-                            }, ColorFrame)
-                            
-                            local frameShadowCorner = library:create("UICorner", {
-                                CornerRadius = UDim.new(0, 8)
-                            }, frameShadow)
-                            
-                            -- Заголовок панели
-                            local TitleBar = library:create("Frame", {
-                                Name = "TitleBar",
-                                BackgroundColor3 = Color3.fromRGB(30, 30, 30),
-                                BorderSizePixel = 0,
-                                Size = UDim2.new(1, 0, 0, 20),
-                                Position = UDim2.new(0, 0, 0, 0),
-                                ZIndex = 201,
-                            }, ColorFrame)
-                            
-                            local TitleCorner = library:create("UICorner", {
-                                CornerRadius = UDim.new(0, 5)
-                            }, TitleBar)
-                            
-                            -- Обрезаем углы снизу
-                            local TitleBottomFrame = library:create("Frame", {
-                                Name = "BottomFrame",
-                                BackgroundColor3 = Color3.fromRGB(30, 30, 30),
-                                BorderSizePixel = 0,
-                                Size = UDim2.new(1, 0, 0, 5),
-                                Position = UDim2.new(0, 0, 1, -5),
-                                ZIndex = 201,
-                            }, TitleBar)
-                            
-                            local TitleText = library:create("TextLabel", {
-                                Name = "Title",
-                                BackgroundTransparency = 1,
-                                Size = UDim2.new(1, 0, 1, 0),
-                                Position = UDim2.new(0, 0, 0, 0),
-                                Font = Enum.Font.GothamSemibold,
-                                Text = "Выбор цвета",
-                                TextColor3 = Color3.fromRGB(255, 255, 255),
-                                TextSize = 12,
-                                ZIndex = 201,
-                            }, TitleBar)
                             
                             -- Палитра цветов
                             local ColorPicker = library:create("ImageButton", {
                                 Name = "ColorPicker",
                                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                                BorderColor3 = Color3.fromRGB(40, 40, 40),
-                                Position = UDim2.new(0, 40, 0, 30),
+                                BorderColor3 = Color3.fromRGB(60, 60, 60),
+                                BorderSizePixel = 1,
+                                Position = UDim2.new(0, 40, 0, 10),
                                 Size = UDim2.new(0, 150, 0, 150),
                                 AutoButtonColor = false,
                                 Image = "rbxassetid://4155801252",
                                 ImageColor3 = Color3.fromRGB(255, 0, 4),
-                                ZIndex = 201,
+                                ZIndex = 200
                             }, ColorFrame)
-                            
-                            -- Закругляем углы палитры
-                            local pickerCorner = library:create("UICorner", {
-                                CornerRadius = UDim.new(0, 4)
-                            }, ColorPicker)
                             
                             -- Индикатор выбранного цвета на палитре
                             local ColorPick = library:create("Frame", {
                                 Name = "ColorPick",
                                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                                BorderSizePixel = 0,
-                                Size = UDim2.new(0, 7, 0, 7),
-                                ZIndex = 202,
-                                AnchorPoint = Vector2.new(0.5, 0.5),
+                                BorderColor3 = Color3.fromRGB(0, 0, 0),
+                                Size = UDim2.new(0, 5, 0, 5),
+                                ZIndex = 201
                             }, ColorPicker)
-                            
-                            local pickCorner = library:create("UICorner", {
-                                CornerRadius = UDim.new(1, 0)
-                            }, ColorPick)
-                            
-                            local pickStroke = library:create("UIStroke", {
-                                Color = Color3.fromRGB(0, 0, 0),
-                                Thickness = 1,
-                                Transparency = 0.5
-                            }, ColorPick)
                             
                             -- Выбор оттенка
                             local HuePicker = library:create("TextButton", {
                                 Name = "HuePicker",
                                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                                BorderColor3 = Color3.fromRGB(40, 40, 40),
-                                Position = UDim2.new(0, 10, 0, 30),
+                                BorderColor3 = Color3.fromRGB(60, 60, 60),
+                                BorderSizePixel = 1,
+                                Position = UDim2.new(0, 10, 0, 10),
                                 Size = UDim2.new(0, 20, 0, 150),
-                                ZIndex = 201,
+                                ZIndex = 200,
                                 AutoButtonColor = false,
-                                Text = "",
+                                Text = ""
                             }, ColorFrame)
                             
-                            -- Закругляем углы
-                            local hueCorner = library:create("UICorner", {
-                                CornerRadius = UDim.new(0, 4)
-                            }, HuePicker)
-                            
                             -- Градиент для выбора оттенка
-                            local UIGradient = library:create("UIGradient", {
+                            local hue_gradient = library:create("UIGradient", {
+                                Color = ColorSequence.new{
+                                    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
+                                    ColorSequenceKeypoint.new(0.167, Color3.fromRGB(255, 255, 0)),
+                                    ColorSequenceKeypoint.new(0.333, Color3.fromRGB(0, 255, 0)),
+                                    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 255)),
+                                    ColorSequenceKeypoint.new(0.667, Color3.fromRGB(0, 0, 255)),
+                                    ColorSequenceKeypoint.new(0.833, Color3.fromRGB(255, 0, 255)),
+                                    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0))
+                                },
                                 Rotation = 90,
-                                Color = ColorSequence.new {
-                                    ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 0, 0)),
-                                    ColorSequenceKeypoint.new(0.17, Color3.fromRGB(255, 0, 255)),
-                                    ColorSequenceKeypoint.new(0.33, Color3.fromRGB(0, 0, 255)),
-                                    ColorSequenceKeypoint.new(0.50, Color3.fromRGB(0, 255, 255)),
-                                    ColorSequenceKeypoint.new(0.67, Color3.fromRGB(0, 255, 0)),
-                                    ColorSequenceKeypoint.new(0.83, Color3.fromRGB(255, 255, 0)),
-                                    ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 0, 0))
-                                }
                             }, HuePicker)
                             
-                            -- Индикатор выбранного оттенка
+                            -- Выбранный оттенок
                             local HuePick = library:create("Frame", {
                                 Name = "HuePick",
                                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                                BorderSizePixel = 0,
-                                Size = UDim2.new(1, 0, 0, 4),
-                                ZIndex = 202,
-                                AnchorPoint = Vector2.new(0, 0.5),
+                                BorderColor3 = Color3.fromRGB(0, 0, 0),
+                                Size = UDim2.new(1, 0, 0, 1),
+                                ZIndex = 201
                             }, HuePicker)
-                            
-                            local huePickCorner = library:create("UICorner", {
-                                CornerRadius = UDim.new(0, 2)
-                            }, HuePick)
-                            
-                            local huePickStroke = library:create("UIStroke", {
-                                Color = Color3.fromRGB(0, 0, 0),
-                                Thickness = 1,
-                                Transparency = 0.5
-                            }, HuePick)
-                            
-                            -- Блок предварительного просмотра выбранного цвета
-                            local ColorPreview = library:create("Frame", {
-                                Name = "ColorPreview",
-                                BackgroundColor3 = value.Colors[index] and value.Colors[index].Color or Color3.fromRGB(255, 255, 255),
-                                BorderSizePixel = 0,
-                                Position = UDim2.new(0, 10, 0, 188),
-                                Size = UDim2.new(0, 30, 0, 30),
-                                ZIndex = 201,
-                                Visible = false
-                            }, ColorFrame)
-                            
-                            local previewCorner = library:create("UICorner", {
-                                CornerRadius = UDim.new(0, 4)
-                            }, ColorPreview)
-                            
-                            local previewStroke = library:create("UIStroke", {
-                                Color = Color3.fromRGB(40, 40, 40),
-                                Thickness = 1
-                            }, ColorPreview)
                             
                             -- Выбор прозрачности
                             local TransparencyPicker = library:create("TextButton", {
                                 Name = "TransparencyPicker",
                                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                                BorderColor3 = Color3.fromRGB(40, 40, 40),
-                                Position = UDim2.new(0.5, -90, 0, 185),
-                                Size = UDim2.new(0, 180, 0, 15),
-                                ZIndex = 201,
+                                BorderColor3 = Color3.fromRGB(60, 60, 60),
+                                BorderSizePixel = 1,
+                                Position = UDim2.new(0, 10, 0, 170),
+                                Size = UDim2.new(0, 180, 0, 20),
+                                ZIndex = 200,
                                 AutoButtonColor = false,
-                                Text = "",
+                                Text = ""
                             }, ColorFrame)
                             
-                            -- Закругляем углы
-                            local transCorner = library:create("UICorner", {
-                                CornerRadius = UDim.new(0, 4)
+                            local transparency_gradient = library:create("UIGradient", {
+                                Transparency = NumberSequence.new{
+                                    NumberSequenceKeypoint.new(0, 0),
+                                    NumberSequenceKeypoint.new(1, 1)
+                                },
+                                Rotation = 0
                             }, TransparencyPicker)
                             
-                            -- Градиент для прозрачности
-                            local TransparencyGradient = library:create("UIGradient", {
-                                Rotation = 0,
-                                Color = ColorSequence.new {
-                                    ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 255, 255)),
-                                    ColorSequenceKeypoint.new(1.00, Color3.fromRGB(0, 0, 0))
-                                }
-                            }, TransparencyPicker)
-                            
-                            -- Индикатор выбранной прозрачности
+                            -- Маркер прозрачности
                             local TransparencyPick = library:create("Frame", {
                                 Name = "TransparencyPick",
                                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                                BorderSizePixel = 0,
-                                Size = UDim2.new(0, 4, 1, 0),
-                                ZIndex = 202,
-                                AnchorPoint = Vector2.new(0.5, 0),
+                                BorderColor3 = Color3.fromRGB(0, 0, 0),
+                                Size = UDim2.new(0, 1, 1, 0),
+                                ZIndex = 201
                             }, TransparencyPicker)
-                            
-                            local transPickCorner = library:create("UICorner", {
-                                CornerRadius = UDim.new(0, 2)
-                            }, TransparencyPick)
-                            
-                            local transPickStroke = library:create("UIStroke", {
-                                Color = Color3.fromRGB(0, 0, 0),
-                                Thickness = 1,
-                                Transparency = 0.5
-                            }, TransparencyPick)
                             
                             -- Объект для работы с цветом
                             local color_data = {h = 0, s = 0, v = 0}
+                            
+                            -- Функция обновления цвета
+                            local function update_color()
+                                local color = Color3.fromHSV(color_data.h, color_data.s, color_data.v)
+                                ColorButton.BackgroundColor3 = color
+                                ColorPicker.ImageColor3 = Color3.fromHSV(color_data.h, 1, 1)
+                                
+                                -- Обновляем индикаторы цветов
+                                if colorIndicators[index] then
+                                    colorIndicators[index].Indicator.BackgroundColor3 = color
+                                end
+                                
+                                -- Обновляем значение
+                                value.Colors[index] = {
+                                    Color = color,
+                                    Transparency = color_data.t
+                                }
+                                
+                                menu.values[tab.tab_num][section_name][sector_name][flag] = value
+                                callback(value)
+                            end
                             
                             -- Обработчики событий
                             local in_color = false
@@ -2672,175 +2473,82 @@ end
                             end)
                             
                             ColorButton.MouseButton1Click:Connect(function()
-                                for i = 1, max_colors do
-                                    if i ~= index and colorPickerButtons[i] and colorPickerButtons[i].Frame then
-                                        colorPickerButtons[i].Frame.Visible = false
-                                    end
-                                end
-                                
                                 ColorFrame.Visible = not ColorFrame.Visible
-                                -- Включаем/выключаем подложку
-                                menu.ToggleDropdownShadow(ColorFrame.Visible)
                             end)
                             
-                            -- Скрытие панели при клике в другом месте
                             ColorFrame.MouseEnter:Connect(function()
                                 in_color = true
                             end)
                             
                             ColorFrame.MouseLeave:Connect(function()
                                 in_color = false
-                            end)
-                            
-                            -- Закрытие при клике вне пикера будет обрабатываться через глобальный обработчик
-                            -- Используем безопасный pcall для всех операций с вводом
-                            pcall(function()
-                                if not library.globalInputHandler then
-                                    library.globalInputHandler = true
-                                    game:GetService("UserInputService").InputBegan:Connect(function(input)
-                                        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                                            if ColorFrame and ColorFrame.Visible and not in_color and not in_color2 then
-                                                ColorFrame.Visible = false
-                                                menu.ToggleDropdownShadow(false)
-                                            end
-                                        end
-                                    end)
+                                if not in_color2 then
+                                    ColorFrame.Visible = false
                                 end
                             end)
                             
-                            -- Выбор цвета на палитре
-                            local function update()
-                                if value.Colors[index] then
-                                    value.Colors[index].Color = Color3.fromHSV(color_data.h, color_data.s, color_data.v)
-                                    value.Colors[index].Transparency = color_data.t or 0
-                                    
-                                    -- Обновляем цвет кнопки
-                                    ColorButton.BackgroundColor3 = value.Colors[index].Color
-                                    
-                                    -- Обновляем индикатор цвета
-                                    if colorIndicators[index] then
-                                        colorIndicators[index].Indicator.BackgroundColor3 = value.Colors[index].Color
-                                    end
-                                    
-                                    -- Обновляем превью
-                                    if ColorPreview then
-                                        ColorPreview.BackgroundColor3 = value.Colors[index].Color
-                                    end
-                                    
-                                    -- Обновляем значение
-                                    menu.values[tab.tab_num][section_name][sector_name][flag] = value
-                                    callback(value)
-                                end
-                            end
-                            
-                            -- Обработка выбора цвета на палитре
+                            -- Обработчик выбора цвета из палитры
                             ColorPicker.MouseButton1Down:Connect(function()
-                                local moveconnection = nil
-                                local releaseconnection = nil
+                                local function update()
+                                    local mouse_pos = library:get_mouse()
+                                    local picker_pos = ColorPicker.AbsolutePosition
+                                    local picker_size = ColorPicker.AbsoluteSize
+                                    
+                                    local x_offset = math.clamp(mouse_pos.X - picker_pos.X, 0, picker_size.X)
+                                    local y_offset = math.clamp(mouse_pos.Y - picker_pos.Y, 0, picker_size.Y)
+                                    
+                                    color_data.s = x_offset / picker_size.X
+                                    color_data.v = 1 - (y_offset / picker_size.Y)
+                                    
+                                    ColorPick.Position = UDim2.new(0, x_offset - 2, 0, y_offset - 2)
+                                    
+                                    update_color()
+                                end
                                 
-                                moveconnection = uis.InputChanged:Connect(function(input)
-                                    if input.UserInputType == Enum.UserInputType.MouseMovement then
-                                        local ColorX = math.clamp(input.Position.X - ColorPicker.AbsolutePosition.X, 0, ColorPicker.AbsoluteSize.X) / ColorPicker.AbsoluteSize.X
-                                        local ColorY = math.clamp(input.Position.Y - ColorPicker.AbsolutePosition.Y, 0, ColorPicker.AbsoluteSize.Y) / ColorPicker.AbsoluteSize.Y
-                                        
-                                        ColorPick.Position = UDim2.new(ColorX, 0, ColorY, 0)
-                                        
-                                        color_data.s = ColorX
-                                        color_data.v = 1 - ColorY
-                                        
-                                        update()
-                                    end
-                                end)
-                                
-                                releaseconnection = uis.InputEnded:Connect(function(input)
-                                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                                        moveconnection:Disconnect()
-                                        releaseconnection:Disconnect()
-                                    end
-                                end)
-                                
-                                local ColorX = math.clamp(mouse.X - ColorPicker.AbsolutePosition.X, 0, ColorPicker.AbsoluteSize.X) / ColorPicker.AbsoluteSize.X
-                                local ColorY = math.clamp(mouse.Y - ColorPicker.AbsolutePosition.Y, 0, ColorPicker.AbsoluteSize.Y) / ColorPicker.AbsoluteSize.Y
-                                
-                                ColorPick.Position = UDim2.new(ColorX, 0, ColorY, 0)
-                                
-                                color_data.s = ColorX
-                                color_data.v = 1 - ColorY
-                                
+                                library:connect_signal(update)
                                 update()
                             end)
                             
-                            -- Обработка выбора оттенка
+                            -- Обработчик выбора оттенка
                             HuePicker.MouseButton1Down:Connect(function()
-                                local moveconnection = nil
-                                local releaseconnection = nil
+                                local function update()
+                                    local mouse_pos = library:get_mouse()
+                                    local picker_pos = HuePicker.AbsolutePosition
+                                    local picker_size = HuePicker.AbsoluteSize
+                                    
+                                    local y_offset = math.clamp(mouse_pos.Y - picker_pos.Y, 0, picker_size.Y)
+                                    
+                                    color_data.h = 1 - (y_offset / picker_size.Y)
+                                    
+                                    HuePick.Position = UDim2.new(0, 0, 0, y_offset)
+                                    
+                                    update_color()
+                                end
                                 
-                                moveconnection = uis.InputChanged:Connect(function(input)
-                                    if input.UserInputType == Enum.UserInputType.MouseMovement then
-                                        local HueY = math.clamp(input.Position.Y - HuePicker.AbsolutePosition.Y, 0, HuePicker.AbsoluteSize.Y) / HuePicker.AbsoluteSize.Y
-                                        
-                                        HuePick.Position = UDim2.new(0, 0, HueY, 0)
-                                        
-                                        color_data.h = 1 - HueY
-                                        
-                                        ColorPicker.ImageColor3 = Color3.fromHSV(color_data.h, 1, 1)
-                                        
-                                        update()
-                                    end
-                                end)
-                                
-                                releaseconnection = uis.InputEnded:Connect(function(input)
-                                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                                        moveconnection:Disconnect()
-                                        releaseconnection:Disconnect()
-                                    end
-                                end)
-                                
-                                local HueY = math.clamp(mouse.Y - HuePicker.AbsolutePosition.Y, 0, HuePicker.AbsoluteSize.Y) / HuePicker.AbsoluteSize.Y
-                                
-                                HuePick.Position = UDim2.new(0, 0, HueY, 0)
-                                
-                                color_data.h = 1 - HueY
-                                
-                                ColorPicker.ImageColor3 = Color3.fromHSV(color_data.h, 1, 1)
-                                
+                                library:connect_signal(update)
                                 update()
                             end)
                             
-                            -- Обработка выбора прозрачности
+                            -- Обработчик выбора прозрачности
                             TransparencyPicker.MouseButton1Down:Connect(function()
-                                local moveconnection = nil
-                                local releaseconnection = nil
+                                local function update()
+                                    local mouse_pos = library:get_mouse()
+                                    local picker_pos = TransparencyPicker.AbsolutePosition
+                                    local picker_size = TransparencyPicker.AbsoluteSize
+                                    
+                                    local x_offset = math.clamp(mouse_pos.X - picker_pos.X, 0, picker_size.X)
+                                    
+                                    color_data.t = x_offset / picker_size.X
+                                    
+                                    TransparencyPick.Position = UDim2.new(0, x_offset, 0, 0)
+                                    
+                                    update_color()
+                                end
                                 
-                                moveconnection = uis.InputChanged:Connect(function(input)
-                                    if input.UserInputType == Enum.UserInputType.MouseMovement then
-                                        local TransparencyX = math.clamp(input.Position.X - TransparencyPicker.AbsolutePosition.X, 0, TransparencyPicker.AbsoluteSize.X) / TransparencyPicker.AbsoluteSize.X
-                                        
-                                        TransparencyPick.Position = UDim2.new(TransparencyX, 0, 0, 0)
-                                        
-                                        color_data.t = TransparencyX
-                                        
-                                        update()
-                                    end
-                                end)
-                                
-                                releaseconnection = uis.InputEnded:Connect(function(input)
-                                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                                        moveconnection:Disconnect()
-                                        releaseconnection:Disconnect()
-                                    end
-                                end)
-                                
-                                local TransparencyX = math.clamp(mouse.X - TransparencyPicker.AbsolutePosition.X, 0, TransparencyPicker.AbsoluteSize.X) / TransparencyPicker.AbsoluteSize.X
-                                
-                                TransparencyPick.Position = UDim2.new(TransparencyX, 0, 0, 0)
-                                
-                                color_data.t = TransparencyX
-                                
+                                library:connect_signal(update)
                                 update()
                             end)
                             
-                            -- Функция для установки значения цвета
                             local function set_color_value(color_value)
                                 if color_value then
                                     local duplicate = Color3.new(color_value.Color.R, color_value.Color.G, color_value.Color.B)
@@ -2892,6 +2600,14 @@ end
                             AutoButtonColor = false,
                         }, Border)
                         
+                        reset_button.MouseEnter:Connect(function()
+                            reset_button.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+                        end)
+                        
+                        reset_button.MouseLeave:Connect(function()
+                            reset_button.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+                        end)
+                        
                         reset_button.MouseButton1Click:Connect(function()
                             -- Сбрасываем к значениям по умолчанию
                             local defaultColors = default and default.Colors or {
@@ -2907,37 +2623,6 @@ end
                             })
                         end)
                         
-                        -- Закругляем углы - убираем, так как они не отображаются в интерфейсе
-                        -- local resetCorner = library:create("UICorner", {
-                        --     CornerRadius = UDim.new(0, 4)
-                        -- }, reset_button)
-                        
-                        -- Красивый градиент - убираем, так как они не отображаются в интерфейсе
-                        -- local resetGradient = library:create("UIGradient", {
-                        --     Rotation = 90,
-                        --     Color = ColorSequence.new{
-                        --         ColorSequenceKeypoint.new(0, Color3.fromRGB(45, 45, 45)),
-                        --         ColorSequenceKeypoint.new(1, Color3.fromRGB(35, 35, 35))
-                        --     }
-                        -- }, reset_button)
-                        
-                        -- Упрощаем эффекты
-                        reset_button.MouseEnter:Connect(function()
-                            reset_button.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-                        end)
-                        
-                        reset_button.MouseLeave:Connect(function()
-                            reset_button.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-                        end)
-                        
-                        reset_button.MouseButton1Down:Connect(function()
-                            reset_button.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-                        end)
-                        
-                        reset_button.MouseButton1Up:Connect(function()
-                            reset_button.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-                        end)
-                        
                         -- Обработчик кнопки добавления цвета
                         AddButton.MouseButton1Click:Connect(function()
                             if value.Count < max_colors then
@@ -2945,12 +2630,12 @@ end
                                 value.Colors[value.Count] = {Color = Color3.fromRGB(255, 255, 255), Transparency = 0}
                                 
                                 -- Показываем соответствующий цветовой пикер
-                                colorPickerButtons[value.Count].Button.Visible = true
+                                colorPickerButtons[value.Count].Container.Visible = true
                                 
                                 -- Показываем соответствующий индикатор и обновляем его цвет
                                 if colorIndicators[value.Count] then
-                                    colorIndicators[value.Count].BackgroundColor3 = value.Colors[value.Count].Color
-                                    colorIndicators[value.Count].Visible = true
+                                    colorIndicators[value.Count].Indicator.BackgroundColor3 = value.Colors[value.Count].Color
+                                    colorIndicators[value.Count].Container.Visible = true
                                 end
                                 
                                 -- Скрываем кнопку добавления если достигли максимума
@@ -2997,18 +2682,6 @@ end
                                 callback(value)
                             end
                         end
-                        
-                        function element:get_value()
-                            return value
-                        end
-                        
-                        function element:set_visible(bool)
-                            Border.Visible = bool
-                        end
-                        
-                        menu.on_load_cfg:Connect(function()
-                            element:set_value(menu.values[tab.tab_num][section_name][sector_name][flag])
-                        end)
                     end
 
                     menu.on_load_cfg:Connect(function()
