@@ -1647,6 +1647,11 @@ end
                                 end
 
                                 element.update_text()
+                                
+                                -- Выключаем подложку после выбора
+                                menu.ToggleDropdownShadow(false)
+                                -- Скрываем выпадающее меню
+                                DropdownScroll.Visible = false
 
                                 do_callback()
                             end)
