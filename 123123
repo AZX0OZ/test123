@@ -132,9 +132,19 @@ function library.new(library_title, cfg_location)
             for _,section in next, tab do
                 for _,sector in next, section do
                     for _,element in next, sector do
-                        if not element.Color then continue end
-
-                        element.Color = {R = element.Color.R, G = element.Color.G, B = element.Color.B}
+                        -- Обработка обычного цвета
+                        if element.Color then 
+                            element.Color = {R = element.Color.R, G = element.Color.G, B = element.Color.B}
+                        end
+                        
+                        -- Обработка массива цветов
+                        if element.Colors then
+                            for i, colorData in pairs(element.Colors) do
+                                if colorData.Color then
+                                    element.Colors[i].Color = {R = colorData.Color.R, G = colorData.Color.G, B = colorData.Color.B}
+                                end
+                            end
+                        end
                     end
                 end
             end
@@ -149,8 +159,18 @@ function library.new(library_title, cfg_location)
             for _2,section in next, tab do
                 for _3,sector in next, section do
                     for _4,element in next, sector do
-                        if element.Color then
+                        -- Обработка обычного цвета
+                        if element.Color and type(element.Color) ~= "table" then
                             element.Color = Color3.new(element.Color.R, element.Color.G, element.Color.B)
+                        end
+                        
+                        -- Обработка массива цветов
+                        if element.Colors then
+                            for i, colorData in pairs(element.Colors) do
+                                if colorData.Color then
+                                    element.Colors[i].Color = Color3.new(colorData.Color.R, colorData.Color.G, colorData.Color.B)
+                                end
+                            end
                         end
 
                         pcall(function()
@@ -507,6 +527,7 @@ end
 
             function section.new_sector(sector_name, sector_side)
                 local sector = {}
+                local elements = {} -- Для хранения созданных элементов
 
                 local actual_side = sector_side == "Right" and Right or Left
                 menu.values[tab.tab_num][section_name][sector_name] = {}
@@ -582,6 +603,9 @@ end
                     local default = data.default and data.default
 
                     local element = {}
+                    
+                    -- Сохраняем элемент в таблице для возможности его получения
+                    elements[text] = element
 
                     function element:get_value()
                         return value
@@ -2724,6 +2748,11 @@ end
                     end)
 
                     return element
+                end
+
+                -- Добавляем функцию для получения элемента по имени
+                function sector:get_element(name)
+                    return elements[name]
                 end
 
                 return sector
