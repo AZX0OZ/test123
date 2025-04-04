@@ -2412,7 +2412,7 @@ end
                                 in_color2 = false
                             end)
                             
-                            UserInputService.InputBegan:Connect(function(input)
+                            uis.InputBegan:Connect(function(input)
                                 if input.UserInputType == Enum.UserInputType.MouseButton1 and ColorFrame.Visible and not in_color and not in_color2 then
                                     ColorFrame.Visible = false
                                     menu.ToggleDropdownShadow(false)
@@ -2439,7 +2439,7 @@ end
                                 local moveconnection = nil
                                 local releaseconnection = nil
                                 
-                                moveconnection = UserInputService.InputChanged:Connect(function(input)
+                                moveconnection = uis.InputChanged:Connect(function(input)
                                     if input.UserInputType == Enum.UserInputType.MouseMovement then
                                         local ColorX = math.clamp(input.Position.X - ColorPicker.AbsolutePosition.X, 0, ColorPicker.AbsoluteSize.X) / ColorPicker.AbsoluteSize.X
                                         local ColorY = math.clamp(input.Position.Y - ColorPicker.AbsolutePosition.Y, 0, ColorPicker.AbsoluteSize.Y) / ColorPicker.AbsoluteSize.Y
@@ -2453,15 +2453,15 @@ end
                                     end
                                 end)
                                 
-                                releaseconnection = UserInputService.InputEnded:Connect(function(input)
+                                releaseconnection = uis.InputEnded:Connect(function(input)
                                     if input.UserInputType == Enum.UserInputType.MouseButton1 then
                                         moveconnection:Disconnect()
                                         releaseconnection:Disconnect()
                                     end
                                 end)
                                 
-                                local ColorX = math.clamp(Mouse.X - ColorPicker.AbsolutePosition.X, 0, ColorPicker.AbsoluteSize.X) / ColorPicker.AbsoluteSize.X
-                                local ColorY = math.clamp(Mouse.Y - ColorPicker.AbsolutePosition.Y, 0, ColorPicker.AbsoluteSize.Y) / ColorPicker.AbsoluteSize.Y
+                                local ColorX = math.clamp(mouse.X - ColorPicker.AbsolutePosition.X, 0, ColorPicker.AbsoluteSize.X) / ColorPicker.AbsoluteSize.X
+                                local ColorY = math.clamp(mouse.Y - ColorPicker.AbsolutePosition.Y, 0, ColorPicker.AbsoluteSize.Y) / ColorPicker.AbsoluteSize.Y
                                 
                                 ColorPick.Position = UDim2.new(ColorX, 0, ColorY, 0)
                                 
@@ -2476,7 +2476,7 @@ end
                                 local moveconnection = nil
                                 local releaseconnection = nil
                                 
-                                moveconnection = UserInputService.InputChanged:Connect(function(input)
+                                moveconnection = uis.InputChanged:Connect(function(input)
                                     if input.UserInputType == Enum.UserInputType.MouseMovement then
                                         local HueY = math.clamp(input.Position.Y - HuePicker.AbsolutePosition.Y, 0, HuePicker.AbsoluteSize.Y) / HuePicker.AbsoluteSize.Y
                                         
@@ -2490,14 +2490,14 @@ end
                                     end
                                 end)
                                 
-                                releaseconnection = UserInputService.InputEnded:Connect(function(input)
+                                releaseconnection = uis.InputEnded:Connect(function(input)
                                     if input.UserInputType == Enum.UserInputType.MouseButton1 then
                                         moveconnection:Disconnect()
                                         releaseconnection:Disconnect()
                                     end
                                 end)
                                 
-                                local HueY = math.clamp(Mouse.Y - HuePicker.AbsolutePosition.Y, 0, HuePicker.AbsoluteSize.Y) / HuePicker.AbsoluteSize.Y
+                                local HueY = math.clamp(mouse.Y - HuePicker.AbsolutePosition.Y, 0, HuePicker.AbsoluteSize.Y) / HuePicker.AbsoluteSize.Y
                                 
                                 HuePick.Position = UDim2.new(0, 0, HueY, 0)
                                 
@@ -2513,7 +2513,7 @@ end
                                 local moveconnection = nil
                                 local releaseconnection = nil
                                 
-                                moveconnection = UserInputService.InputChanged:Connect(function(input)
+                                moveconnection = uis.InputChanged:Connect(function(input)
                                     if input.UserInputType == Enum.UserInputType.MouseMovement then
                                         local TransparencyX = math.clamp(input.Position.X - TransparencyPicker.AbsolutePosition.X, 0, TransparencyPicker.AbsoluteSize.X) / TransparencyPicker.AbsoluteSize.X
                                         
@@ -2525,14 +2525,14 @@ end
                                     end
                                 end)
                                 
-                                releaseconnection = UserInputService.InputEnded:Connect(function(input)
+                                releaseconnection = uis.InputEnded:Connect(function(input)
                                     if input.UserInputType == Enum.UserInputType.MouseButton1 then
                                         moveconnection:Disconnect()
                                         releaseconnection:Disconnect()
                                     end
                                 end)
                                 
-                                local TransparencyX = math.clamp(Mouse.X - TransparencyPicker.AbsolutePosition.X, 0, TransparencyPicker.AbsoluteSize.X) / TransparencyPicker.AbsoluteSize.X
+                                local TransparencyX = math.clamp(mouse.X - TransparencyPicker.AbsolutePosition.X, 0, TransparencyPicker.AbsoluteSize.X) / TransparencyPicker.AbsoluteSize.X
                                 
                                 TransparencyPick.Position = UDim2.new(TransparencyX, 0, 0, 0)
                                 
