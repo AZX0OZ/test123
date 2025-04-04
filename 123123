@@ -852,7 +852,7 @@ end
                                 Position = UDim2.new(1, 5, 0, 0),
                                 Size = UDim2.new(0, 200, 0, 170),
                                 Visible = false,
-                                ZIndex = 2,
+                                ZIndex = 10,
                             }, ColorButton)
 
                             local ColorPicker = library:create("ImageButton", {
@@ -864,7 +864,7 @@ end
                                 AutoButtonColor = false,
                                 Image = "rbxassetid://4155801252",
                                 ImageColor3 = Color3.fromRGB(255, 0, 4),
-                                ZIndex = 2,
+                                ZIndex = 10,
                             }, ColorFrame)
 
                             local ColorPick = library:create("Frame", {
@@ -872,7 +872,7 @@ end
                                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                                 BorderColor3 = Color3.fromRGB(0, 0, 0),
                                 Size = UDim2.new(0, 1, 0, 1),
-                                ZIndex = 2,
+                                ZIndex = 10,
                             }, ColorPicker)
 
                             local HuePicker = library:create("TextButton", {
@@ -881,7 +881,7 @@ end
                                 BorderColor3 = Color3.fromRGB(0, 0, 0),
                                 Position = UDim2.new(0, 10, 0, 10),
                                 Size = UDim2.new(0, 20, 0, 150),
-                                ZIndex = 2,
+                                ZIndex = 10,
                                 AutoButtonColor = false,
                                 Text = "",
                             }, ColorFrame)
@@ -904,7 +904,7 @@ end
                                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                                 BorderColor3 = Color3.fromRGB(0, 0, 0),
                                 Size = UDim2.new(1, 0, 0, 1),
-                                ZIndex = 2,
+                                ZIndex = 10,
                             }, HuePicker)
 
                             local in_color = false
@@ -948,14 +948,14 @@ end
                                     Image = "rbxassetid://3887014957",
                                     ScaleType = Enum.ScaleType.Tile,
                                     TileSize = UDim2.new(0, 10, 0, 10),
-                                    ZIndex = 2,
+                                    ZIndex = 10,
                                 }, ColorFrame)
 
                                 TransparencyColor = library:create("ImageLabel", {
                                     BackgroundTransparency = 1,
                                     Size = UDim2.new(1, 0, 1, 0),
                                     Image = "rbxassetid://3887017050",
-                                    ZIndex = 2,
+                                    ZIndex = 10,
                                 }, TransparencyPicker)
 
                                 TransparencyPick = library:create("Frame", {
@@ -963,7 +963,7 @@ end
                                     BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                                     BorderColor3 = Color3.fromRGB(0, 0, 0),
                                     Size = UDim2.new(0, 1, 1, 0),
-                                    ZIndex = 2,
+                                    ZIndex = 10,
                                 }, TransparencyPicker)
 
                                 extra_value.Transparency = 0
@@ -1166,7 +1166,7 @@ end
                             TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
                             BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
                             Visible = false,
-                            ZIndex = 2,
+                            ZIndex = 5,
                         }, Dropdown)
 
                         local UIListLayout = library:create("UIListLayout", {
@@ -1190,36 +1190,13 @@ end
                         DropdownButton.MouseButton1Down:Connect(function()
                             DropdownScroll.Visible = not DropdownScroll.Visible
                             dropdown_open = DropdownScroll.Visible
-                            
-                            -- Исправление для правильного отображения и позиционирования списка
-                            if dropdown_open then
-                                -- Сбрасываем позицию прокрутки
-                                DropdownScroll.CanvasPosition = Vector2.new(0, 0)
-                                
-                                -- Обновляем размер для правильного отображения
-                                if options_num > 0 then
-                                    local actual_size = math.min(options_num, 4) * 20
-                                    DropdownScroll.Size = UDim2.new(0, 260, 0, actual_size)
-                                    
-                                    -- Устанавливаем z-index, чтобы меню отображалось поверх других элементов
-                                    DropdownScroll.ZIndex = 5
-                                    for _, child in pairs(DropdownScroll:GetChildren()) do
-                                        if child:IsA("GuiObject") then
-                                            child.ZIndex = 6
-                                            for _, subchild in pairs(child:GetChildren()) do
-                                                if subchild:IsA("GuiObject") then
-                                                    subchild.ZIndex = 7
-                                                end
-                                            end
-                                        end
-                                    end
-                                end
-                                
-                                library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)})
-                                library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)})
-                            else
+
+                            if not dropdown_open then
                                 library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
                                 library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
+                            else
+                                library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)})
+                                library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)})
                             end
                         end)
                         Dropdown.MouseEnter:Connect(function()
@@ -1269,7 +1246,7 @@ end
                                 AutoButtonColor = false,
                                 Font = Enum.Font.SourceSans,
                                 Text = "",
-                                ZIndex = 2,
+                                ZIndex = 6,
                             }, DropdownScroll)
 
                             local ButtonText = library:create("TextLabel", {
@@ -1282,7 +1259,7 @@ end
                                 TextColor3 = Color3.fromRGB(150, 150, 150),
                                 TextSize = 14,
                                 TextXAlignment = Enum.TextXAlignment.Left,
-                                ZIndex = 2,
+                                ZIndex = 6,
                             }, Button)
 
                             local Decoration = library:create("Frame", {
@@ -1291,7 +1268,7 @@ end
                                 BorderSizePixel = 0,
                                 Size = UDim2.new(0, 1, 1, 0),
                                 Visible = false,
-                                ZIndex = 2,
+                                ZIndex = 6,
                             }, Button)
 
                             Button.MouseEnter:Connect(function()
@@ -1306,18 +1283,11 @@ end
                                 DropdownScroll.Visible = false
                                 DropdownButtonText.Text = v
                                 value.Dropdown = v
-                                
-                                -- Сбрасываем позицию прокрутки после выбора опции
-                                DropdownScroll.CanvasPosition = Vector2.new(0, 0)
 
                                 library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
                                 library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
 
-                                -- Приостанавливаем выполнение колбека, чтобы избежать гонок данных
-                                task.spawn(function()
-                                    wait(0.05) -- небольшая задержка для визуального эффекта
-                                    do_callback()
-                                end)
+                                do_callback()
                             end)
 
                             if dropdown_is_first then
@@ -1402,7 +1372,7 @@ end
                             TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
                             BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
                             Visible = false,
-                            ZIndex = 2,
+                            ZIndex = 5,
                         }, Dropdown)
 
                         local UIListLayout = library:create("UIListLayout", {
@@ -1426,36 +1396,13 @@ end
                         DropdownButton.MouseButton1Down:Connect(function()
                             DropdownScroll.Visible = not DropdownScroll.Visible
                             dropdown_open = DropdownScroll.Visible
-                            
-                            -- Исправление для правильного отображения и позиционирования списка
-                            if dropdown_open then
-                                -- Сбрасываем позицию прокрутки
-                                DropdownScroll.CanvasPosition = Vector2.new(0, 0)
-                                
-                                -- Обновляем размер для правильного отображения
-                                if options_num > 0 then
-                                    local actual_size = math.min(options_num, 4) * 20
-                                    DropdownScroll.Size = UDim2.new(0, 260, 0, actual_size)
-                                    
-                                    -- Устанавливаем z-index, чтобы меню отображалось поверх других элементов
-                                    DropdownScroll.ZIndex = 5
-                                    for _, child in pairs(DropdownScroll:GetChildren()) do
-                                        if child:IsA("GuiObject") then
-                                            child.ZIndex = 6
-                                            for _, subchild in pairs(child:GetChildren()) do
-                                                if subchild:IsA("GuiObject") then
-                                                    subchild.ZIndex = 7
-                                                end
-                                            end
-                                        end
-                                    end
-                                end
-                                
-                                library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)})
-                                library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)})
-                            else
+
+                            if not dropdown_open then
                                 library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
                                 library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
+                            else
+                                library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)})
+                                library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)})
                             end
                         end)
                         Dropdown.MouseEnter:Connect(function()
@@ -1548,7 +1495,7 @@ end
                                 AutoButtonColor = false,
                                 Font = Enum.Font.SourceSans,
                                 Text = "",
-                                ZIndex = 2,
+                                ZIndex = 6,
                             }, DropdownScroll)
 
                             local ButtonText = library:create("TextLabel", {
@@ -1561,7 +1508,7 @@ end
                                 TextColor3 = Color3.fromRGB(150, 150, 150),
                                 TextSize = 14,
                                 TextXAlignment = Enum.TextXAlignment.Left,
-                                ZIndex = 2,
+                                ZIndex = 6,
                             }, Button)
 
                             local Decoration = library:create("Frame", {
@@ -1570,7 +1517,7 @@ end
                                 BorderSizePixel = 0,
                                 Size = UDim2.new(0, 1, 1, 0),
                                 Visible = false,
-                                ZIndex = 2,
+                                ZIndex = 6,
                             }, Button)
 
                             local mouse_in = false
