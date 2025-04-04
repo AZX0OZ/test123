@@ -2268,34 +2268,34 @@ end
                             local indicator = library:create("Frame", {
                                 Name = "ColorIndicator" .. i,
                                 BackgroundColor3 = value.Colors[i] and value.Colors[i].Color or Color3.fromRGB(255, 255, 255),
-                                BorderSizePixel = 0,
+                                BorderSizePixel = 1,
+                                BorderColor3 = Color3.fromRGB(60, 60, 60),
                                 Size = UDim2.new(1, -4, 1, -2),
                                 Position = UDim2.new(0, 2, 0, 1),
                                 Visible = true,
-                                ClipsDescendants = true
+                                ClipsDescendants = false
                             }, indicatorContainer)
                             
-                            -- Создаем эффект блеска для индикатора
-                            local shineEffect = library:create("Frame", {
-                                Name = "ShineEffect",
-                                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                                BackgroundTransparency = 0.7,
-                                BorderSizePixel = 0,
-                                Size = UDim2.new(0.7, 0, 2, 0),
-                                Position = UDim2.new(-0.7, 0, -0.5, 0),
-                                Rotation = 45,
-                                Visible = true
-                            }, indicator)
+                            -- Убираем эффект блеска
+                            -- local shineEffect = library:create("Frame", {
+                            --     Name = "ShineEffect",
+                            --     BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                            --     BackgroundTransparency = 0.7,
+                            --     BorderSizePixel = 0,
+                            --     Size = UDim2.new(0.7, 0, 2, 0),
+                            --     Position = UDim2.new(-0.7, 0, -0.5, 0),
+                            --     Rotation = 45,
+                            --     Visible = true
+                            -- }, indicator)
                             
-                            -- Закругляем углы
-                            local uiCorner = library:create("UICorner", {
-                                CornerRadius = UDim.new(0, 3)
-                            }, indicator)
+                            -- Закругляем углы - убираем для совместимости со стилем
+                            -- local uiCorner = library:create("UICorner", {
+                            --     CornerRadius = UDim.new(0, 3)
+                            -- }, indicator)
                             
                             colorIndicators[i] = {
                                 Container = indicatorContainer,
-                                Indicator = indicator,
-                                ShineEffect = shineEffect
+                                Indicator = indicator
                             }
                         end
                         
@@ -2318,7 +2318,7 @@ end
                                 Name = "ColorButtonContainer" .. index,
                                 BackgroundTransparency = 1,
                                 Size = UDim2.new(1/max_colors, -5, 1, 0),
-                                Position = UDim2.new((index-1)/max_colors, (index-1)*5, 0, 0),
+                                Position = UDim2.new((index-1)/max_colors, index > 1 and (index-1)*5 or 0, 0, 0),
                                 Visible = index <= value.Count
                             }, ColorButtons)
                             
@@ -2333,29 +2333,33 @@ end
                                 ClipsDescendants = true,
                             }, ColorButtonContainer)
                             
-                            -- Закругляем углы
-                            local buttonCorner = library:create("UICorner", {
-                                CornerRadius = UDim.new(0, 4)
-                            }, ColorButton)
+                            -- Вместо UICorner используем простую рамку
+                            ColorButton.BorderSizePixel = 1
+                            ColorButton.BorderColor3 = Color3.fromRGB(60, 60, 60)
+                            
+                            -- Убираем лишние эффекты
+                            -- local buttonCorner = library:create("UICorner", {
+                            --     CornerRadius = UDim.new(0, 4)
+                            -- }, ColorButton)
                             
                             -- Добавляем тень
-                            local buttonStroke = library:create("UIStroke", {
-                                Color = Color3.fromRGB(40, 40, 40),
-                                Thickness = 1,
-                                Transparency = 0.5
-                            }, ColorButton)
+                            -- local buttonStroke = library:create("UIStroke", {
+                            --     Color = Color3.fromRGB(60, 60, 60),
+                            --     Thickness = 1,
+                            --     Transparency = 0
+                            -- }, ColorButton)
                             
                             -- Добавляем эффект блеска
-                            local shineEffect = library:create("Frame", {
-                                Name = "ShineEffect",
-                                BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                                BackgroundTransparency = 0.7,
-                                BorderSizePixel = 0,
-                                Size = UDim2.new(0.7, 0, 2, 0),
-                                Position = UDim2.new(-0.7, 0, -0.5, 0),
-                                Rotation = 45,
-                                Visible = true
-                            }, ColorButton)
+                            -- local shineEffect = library:create("Frame", {
+                            --     Name = "ShineEffect",
+                            --     BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+                            --     BackgroundTransparency = 0.7,
+                            --     BorderSizePixel = 0,
+                            --     Size = UDim2.new(0.7, 0, 2, 0),
+                            --     Position = UDim2.new(-0.7, 0, -0.5, 0),
+                            --     Rotation = 45,
+                            --     Visible = true
+                            -- }, ColorButton)
                             
                             -- Кнопка удаления цвета (для всех кроме первого)
                             local RemoveButton = nil
@@ -2655,12 +2659,16 @@ end
                             -- Анимация при наведении на кнопку выбора цвета
                             ColorButton.MouseEnter:Connect(function()
                                 in_color2 = true
-                                library:tween(buttonStroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Color = Color3.fromRGB(100, 100, 100)})
+                                ColorButton.BorderColor3 = Color3.fromRGB(100, 100, 100)
                             end)
                             
                             ColorButton.MouseLeave:Connect(function()
                                 in_color2 = false
-                                library:tween(buttonStroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Color = Color3.fromRGB(40, 40, 40)})
+                                ColorButton.BorderColor3 = Color3.fromRGB(60, 60, 60)
+                                
+                                if not in_color then
+                                    ColorFrame.Visible = false
+                                end
                             end)
                             
                             ColorButton.MouseButton1Click:Connect(function()
@@ -2870,51 +2878,21 @@ end
                         end
                         
                         -- Создаем кнопку сброса к значениям по умолчанию
-                        local ResetButton = library:create("TextButton", {
+                        local reset_button = library:create("TextButton", {
                             Name = "ResetButton",
-                            BackgroundColor3 = Color3.fromRGB(35, 35, 35),
-                            BorderSizePixel = 0,
-                            Size = UDim2.new(1, -10, 0, 25),
+                            BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+                            BorderColor3 = Color3.fromRGB(60, 60, 60),
+                            BorderSizePixel = 1,
+                            Size = UDim2.new(1, -10, 0, 20),
                             Position = UDim2.new(0, 5, 0, ColorContainer.Position.Y.Offset + ColorContainer.Size.Y.Offset + 5),
-                            Font = Enum.Font.GothamSemibold,
-                            Text = "Сбросить цвета",
-                            TextColor3 = Color3.fromRGB(200, 200, 200),
-                            TextSize = 12,
+                            Font = Enum.Font.Ubuntu,
+                            Text = "Reset Colors to Default",
+                            TextColor3 = Color3.fromRGB(255, 255, 255),
+                            TextSize = 14,
                             AutoButtonColor = false,
                         }, Border)
                         
-                        -- Закругляем углы
-                        local resetCorner = library:create("UICorner", {
-                            CornerRadius = UDim.new(0, 4)
-                        }, ResetButton)
-                        
-                        -- Красивый градиент
-                        local resetGradient = library:create("UIGradient", {
-                            Rotation = 90,
-                            Color = ColorSequence.new{
-                                ColorSequenceKeypoint.new(0, Color3.fromRGB(45, 45, 45)),
-                                ColorSequenceKeypoint.new(1, Color3.fromRGB(35, 35, 35))
-                            }
-                        }, ResetButton)
-                        
-                        -- Эффект нажатия
-                        ResetButton.MouseEnter:Connect(function()
-                            library:tween(ResetButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(45, 45, 45)})
-                            library:tween(ResetButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)})
-                        end)
-                        
-                        ResetButton.MouseLeave:Connect(function()
-                            library:tween(ResetButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(35, 35, 35)})
-                            library:tween(ResetButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(200, 200, 200)})
-                        end)
-                        
-                        ResetButton.MouseButton1Down:Connect(function()
-                            library:tween(ResetButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(30, 30, 30)})
-                        end)
-                        
-                        ResetButton.MouseButton1Up:Connect(function()
-                            library:tween(ResetButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = Color3.fromRGB(45, 45, 45)})
-                            
+                        reset_button.MouseButton1Click:Connect(function()
                             -- Сбрасываем к значениям по умолчанию
                             local defaultColors = default and default.Colors or {
                                 {Color = Color3.fromRGB(255, 255, 255), Transparency = 0},
@@ -2927,6 +2905,37 @@ end
                                 Colors = defaultColors,
                                 Count = defaultCount
                             })
+                        end)
+                        
+                        -- Закругляем углы - убираем, так как они не отображаются в интерфейсе
+                        -- local resetCorner = library:create("UICorner", {
+                        --     CornerRadius = UDim.new(0, 4)
+                        -- }, reset_button)
+                        
+                        -- Красивый градиент - убираем, так как они не отображаются в интерфейсе
+                        -- local resetGradient = library:create("UIGradient", {
+                        --     Rotation = 90,
+                        --     Color = ColorSequence.new{
+                        --         ColorSequenceKeypoint.new(0, Color3.fromRGB(45, 45, 45)),
+                        --         ColorSequenceKeypoint.new(1, Color3.fromRGB(35, 35, 35))
+                        --     }
+                        -- }, reset_button)
+                        
+                        -- Упрощаем эффекты
+                        reset_button.MouseEnter:Connect(function()
+                            reset_button.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+                        end)
+                        
+                        reset_button.MouseLeave:Connect(function()
+                            reset_button.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+                        end)
+                        
+                        reset_button.MouseButton1Down:Connect(function()
+                            reset_button.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+                        end)
+                        
+                        reset_button.MouseButton1Up:Connect(function()
+                            reset_button.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
                         end)
                         
                         -- Обработчик кнопки добавления цвета
