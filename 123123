@@ -642,7 +642,7 @@ end
                             has_extra = true
                             local extra_flag = "$"..flag
 
-                            local extra_value = {Key, Type = "Always", Active = true}
+                            local extra_value = {Key = key_default, Type = "Toggle", Active = true, ToggleKey = true}
                             key_callback = key_callback or function() end
 
                             local Keybind = library:create("TextButton", {
@@ -652,7 +652,7 @@ end
                                 Position = UDim2.new(0, 265, 0, 0),
                                 Size = UDim2.new(0, 56, 0, 20),
                                 Font = Enum.Font.Ubuntu,
-                                Text = "[ NONE ]",
+                                Text = key_default and "[ "..key_default:upper().." ]" or "[ NONE ]",
                                 TextColor3 = Color3.fromRGB(150, 150, 150),
                                 TextSize = 14,
                                 TextXAlignment = Enum.TextXAlignment.Right,
@@ -787,6 +787,11 @@ end
                                     if key == extra_value.Key then
                                         if extra_value.Type == "Toggle" then
                                             extra_value.Active = not extra_value.Active
+                                            
+                                            -- Если это биндкей для тумблера, переключаем тумблер
+                                            if extra_value.ToggleKey then
+                                                element:set_value({Toggle = not value.Toggle})
+                                            end
                                         elseif extra_value.Type == "Hold" then
                                             extra_value.Active = true
                                         end
