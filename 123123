@@ -1190,13 +1190,36 @@ end
                         DropdownButton.MouseButton1Down:Connect(function()
                             DropdownScroll.Visible = not DropdownScroll.Visible
                             dropdown_open = DropdownScroll.Visible
-
-                            if not dropdown_open then
-                                library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
-                                library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
-                            else
+                            
+                            -- Исправление для правильного отображения и позиционирования списка
+                            if dropdown_open then
+                                -- Сбрасываем позицию прокрутки
+                                DropdownScroll.CanvasPosition = Vector2.new(0, 0)
+                                
+                                -- Обновляем размер для правильного отображения
+                                if options_num > 0 then
+                                    local actual_size = math.min(options_num, 4) * 20
+                                    DropdownScroll.Size = UDim2.new(0, 260, 0, actual_size)
+                                    
+                                    -- Устанавливаем z-index, чтобы меню отображалось поверх других элементов
+                                    DropdownScroll.ZIndex = 5
+                                    for _, child in pairs(DropdownScroll:GetChildren()) do
+                                        if child:IsA("GuiObject") then
+                                            child.ZIndex = 6
+                                            for _, subchild in pairs(child:GetChildren()) do
+                                                if subchild:IsA("GuiObject") then
+                                                    subchild.ZIndex = 7
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                                
                                 library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)})
                                 library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)})
+                            else
+                                library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
+                                library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
                             end
                         end)
                         Dropdown.MouseEnter:Connect(function()
@@ -1283,11 +1306,18 @@ end
                                 DropdownScroll.Visible = false
                                 DropdownButtonText.Text = v
                                 value.Dropdown = v
+                                
+                                -- Сбрасываем позицию прокрутки после выбора опции
+                                DropdownScroll.CanvasPosition = Vector2.new(0, 0)
 
                                 library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
                                 library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
 
-                                do_callback()
+                                -- Приостанавливаем выполнение колбека, чтобы избежать гонок данных
+                                task.spawn(function()
+                                    wait(0.05) -- небольшая задержка для визуального эффекта
+                                    do_callback()
+                                end)
                             end)
 
                             if dropdown_is_first then
@@ -1396,13 +1426,36 @@ end
                         DropdownButton.MouseButton1Down:Connect(function()
                             DropdownScroll.Visible = not DropdownScroll.Visible
                             dropdown_open = DropdownScroll.Visible
-
-                            if not dropdown_open then
-                                library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
-                                library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
-                            else
+                            
+                            -- Исправление для правильного отображения и позиционирования списка
+                            if dropdown_open then
+                                -- Сбрасываем позицию прокрутки
+                                DropdownScroll.CanvasPosition = Vector2.new(0, 0)
+                                
+                                -- Обновляем размер для правильного отображения
+                                if options_num > 0 then
+                                    local actual_size = math.min(options_num, 4) * 20
+                                    DropdownScroll.Size = UDim2.new(0, 260, 0, actual_size)
+                                    
+                                    -- Устанавливаем z-index, чтобы меню отображалось поверх других элементов
+                                    DropdownScroll.ZIndex = 5
+                                    for _, child in pairs(DropdownScroll:GetChildren()) do
+                                        if child:IsA("GuiObject") then
+                                            child.ZIndex = 6
+                                            for _, subchild in pairs(child:GetChildren()) do
+                                                if subchild:IsA("GuiObject") then
+                                                    subchild.ZIndex = 7
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                                
                                 library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)})
                                 library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)})
+                            else
+                                library:tween(DropdownText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
+                                library:tween(DropdownButtonText, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(150, 150, 150)})
                             end
                         end)
                         Dropdown.MouseEnter:Connect(function()
