@@ -370,7 +370,7 @@ end
 
             num_sections += 1
 
-            menu.values[tab.tab_num] = {}
+            menu.values[tab.tab_num][section_name] = {}
 
             local SectionButton = library:create("TextButton", {
                 Name = "SectionButton",
@@ -477,7 +477,7 @@ end
                 local sector = {}
 
                 local actual_side = sector_side == "Right" and Right or Left
-                menu.values[tab.tab_num][sector_name] = {}
+                menu.values[tab.tab_num][section_name][sector_name] = {}
 
                 local Border = library:create("Frame", {
                     BackgroundColor3 = Color3.fromRGB(5, 5, 5),
@@ -513,19 +513,35 @@ end
                     TextSize = 14,
                 }, Border)
 
-                function sector:element(element_type, text, data, callback)
-                    local value = nil
-                    local flag = text
-                    
-                    if menu.values[tab.tab_num][section_name][sector_name][flag] == nil then
-                        menu.values[tab.tab_num][section_name][sector_name][flag] = value
-                    else
-                        value = menu.values[tab.tab_num][section_name][sector_name][flag]
-                    end
-                    
-                    data = data or {}
-                    callback = callback or function() end
-                    
+                function sector.create_line(thickness)
+                    thickness = thickness or 3
+                    Border.Size = Border.Size + UDim2.new(0, 0, 0, thickness * 3)
+
+                    local LineFrame = library:create("Frame", {
+                        Name = "LineFrame",
+                        BackgroundTransparency = 1,
+                        Position = UDim2.new(0, 0, 0, 0),
+                        Size = UDim2.new(0, 250, 0, thickness * 3),
+                    }, Container)
+
+                    local Line = library:create("Frame", {
+                        Name = "Line",
+                        BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+                        BorderColor3 = Color3.fromRGB(0, 0, 0),
+                        Position = UDim2.new(0.5, 0, 0.5, 0),
+                        AnchorPoint = Vector2.new(0.5, 0.5),
+                        Size = UDim2.new(1, 0, 0, thickness),
+                    }, LineFrame)
+                end
+
+                function sector.element(type, text, data, callback, c_flag)
+                    text, data, callback = text and text or type, data and data or {}, callback and callback or function() end
+
+                    local value = {}
+
+                    local flag = c_flag and text.." "..c_flag or text
+                    menu.values[tab.tab_num][section_name][sector_name][flag] = value
+
                     local function do_callback()
                         menu.values[tab.tab_num][section_name][sector_name][flag] = value
                         callback(value)
@@ -539,7 +555,7 @@ end
                         return value
                     end
 
-                    if element_type == "Toggle" then
+                    if type == "Toggle" then
                         Border.Size = Border.Size + UDim2.new(0, 0, 0, 18)
 
                         value = {Toggle = default and default.Toggle or false}
@@ -1116,7 +1132,7 @@ end
 
                             return color
                         end
-                    elseif element_type == "Dropdown" then
+                    elseif type == "Dropdown" then
                         Border.Size = Border.Size + UDim2.new(0, 0, 0, 45)
 
                         value = {Dropdown = default and default.Dropdown or data.options[1]}
@@ -1358,7 +1374,7 @@ end
                             end
                         end
                         element:set_value(value, true)
-                    elseif element_type == "Combo" then
+                    elseif type == "Combo" then
                         Border.Size = Border.Size + UDim2.new(0, 0, 0, 45)
 
                         value = {Combo = default and default.Combo or {}}
@@ -1650,7 +1666,7 @@ end
                             end
                         end
                         element:set_value(value, true)
-                    elseif element_type == "Button" then
+                    elseif type == "Button" then
                         Border.Size = Border.Size + UDim2.new(0, 0, 0, 30)
 
                         local ButtonFrame = library:create("Frame", {
@@ -1685,7 +1701,7 @@ end
                             library:tween(Button, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BorderColor3 = Color3.fromRGB(0, 0, 0)})
                             do_callback()
                         end)
-                    elseif element_type == "TextBox" then
+                    elseif type == "TextBox" then
                         Border.Size = Border.Size + UDim2.new(0, 0, 0, 30)
 
                         value = {Text = data.default and data.default or ""}
@@ -1759,7 +1775,7 @@ end
                             end
                         end
                         element:set_value(value, true)
-                    elseif element_type == "Scroll" then
+                    elseif type == "Scroll" then
                         local scrollsize = data.scrollsize and data.scrollsize or 5
 
                         Border.Size = Border.Size + UDim2.new(0, 0, 0, scrollsize * 20 + 10)
@@ -1981,27 +1997,13 @@ end
                             end
                         end
                         element:set_value(value, true)
-                    elseif element_type == "Slider" then
+                    elseif type == "Slider" then
                         Border.Size = Border.Size + UDim2.new(0, 0, 0, 35)
 
-                        local defaultValue = 0
-                        if default ~= nil then
-                            if _G.type(default) == "table" and default.default ~= nil then
-                                defaultValue = default.default
-                            elseif _G.type(default) == "number" then
-                                defaultValue = default
-                            end
-                        end
-                        value = {Slider = defaultValue}
+                        value = {Slider = default and default.default or 0}
 
-                        local min, max = 0, 100
-                        local precise = false
-                        
-                        if default ~= nil and _G.type(default) == "table" then
-                            min = default.min or min
-                            max = default.max or max
-                            precise = default.precise or precise
-                        end
+                        local min, max = default and default.min or 0, default and default.max or 100
+                        local precise = default and default.precise or false
                         
                         local Slider = library:create("Frame", {
                             Name = "Slider",
@@ -2162,7 +2164,7 @@ end
                     end
 
                     menu.on_load_cfg:Connect(function()
-                        if element_type ~= "Button" and element_type ~= "Scroll" then
+                        if type ~= "Button" and type ~= "Scroll" then
                             element:set_value(menu.values[tab.tab_num][section_name][sector_name][flag])
                         end
                     end)
