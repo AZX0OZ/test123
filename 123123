@@ -2000,10 +2000,24 @@ end
                     elseif type == "Slider" then
                         Border.Size = Border.Size + UDim2.new(0, 0, 0, 35)
 
-                        value = {Slider = default and default.default or 0}
+                        local defaultValue = 0
+                        if default ~= nil then
+                            if type(default) == "table" and default.default ~= nil then
+                                defaultValue = default.default
+                            elseif type(default) == "number" then
+                                defaultValue = default
+                            end
+                        end
+                        value = {Slider = defaultValue}
 
-                        local min, max = default and default.min or 0, default and default.max or 100
-                        local precise = default and default.precise or false
+                        local min, max = 0, 100
+                        local precise = false
+                        
+                        if default ~= nil and type(default) == "table" then
+                            min = default.min or min
+                            max = default.max or max
+                            precise = default.precise or precise
+                        end
                         
                         local Slider = library:create("Frame", {
                             Name = "Slider",
@@ -2185,3 +2199,5 @@ end
 end
 
 return library 
+
+--
